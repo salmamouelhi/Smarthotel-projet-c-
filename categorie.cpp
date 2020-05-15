@@ -68,7 +68,7 @@ QSqlQueryModel * categorie::recherchecat(const QString &id)
 {
 
     QSqlQueryModel * model = new QSqlQueryModel();
-    model->setQuery("select * from categorie where(id_categorie LIKE '"+id+"')");
+    model->setQuery("select * from categorie where(id_categorie LIKE '"+id+"')  or (nom_categorie LIKE '"+id+"')");
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("id_categorie"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("nom_categorie"));
 

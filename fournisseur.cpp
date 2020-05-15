@@ -96,7 +96,7 @@ QSqlQueryModel * fournisseur::recherchefour(const QString &id)
 {
 
     QSqlQueryModel * model = new QSqlQueryModel();
-    model->setQuery("select * from fournisseur where(id_four LIKE '"+id+"')");
+    model->setQuery("select * from fournisseur where(id_four LIKE '"+id+"')  or (nom LIKE '"+id+"')  or (prenom LIKE '"+id+"')  or (adresse LIKE '"+id+"') or (tel LIKE '"+id+"') or (mail LIKE '"+id+"')");
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("id_four"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("nom"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("prenom"));
