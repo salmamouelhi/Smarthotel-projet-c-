@@ -1,1129 +1,695 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "login.h"
-#include "ui_login.h"
-#include "dash.h"
-#include "ui_dash.h"
-#include "statistiques.h"
-//#include "ui_statistiques.h"
-#include "chambre.h"
-#include "dash.h"
+#include "reservation.h"
 #include <QMessageBox>
-#include <QPrinter>
-#include <QPrintDialog>
-#include <QTextDocument>
-#include <QTextStream>
-#include <QTextBrowser>
+#include "reglement.h"
 #include <QPixmap>
-#include <QTimer>
-#include <QDateTime>
-#include <QVariant>
-#include <QLabel>
-#include <QFileDialog>
-#include <QDesktopServices>
-#include<QUrl>
+#include <QSqlQuery>
 #include <QSqlQueryModel>
-#include "qsound.h"
-#include <QPixmap>
-#include <QLabel>
-#include "statistiques.h"
-#include "webcam.h"
-#include "settings.h"
-#include "ui_settings.h"
-#include "mainwindoweuro.h"
-
+#include<QPainter>
+#include<QPdfWriter>
+#include<QtWidgets>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+
     ui->setupUi(this);
-    ui->tabchambre->setModel(tmpchambre.afficher());
-    QTimer *timer=new QTimer(this);
-    connect(timer ,SIGNAL(timeout()),this,SLOT(showTime()));
-    timer->start();
+    QPixmap pix("C:/Users/ISSAM/Desktop/app.png");
+    int w =ui->pic->width();
+    int h =ui->pic->height();
+      ui->pic->setPixmap(pix.scaled(w,h,Qt::KeepAspectRatio));
+     ui->tableView->setModel(tmpr.afficher());
+     ui->tableView_3->setModel(abc.afficher2());
 
 
-
-    QSqlQueryModel * modal2=new QSqlQueryModel();
-    QSqlQuery query;
-    query.prepare("select * from chambre");
-    query.exec();
-    modal2->setQuery(query);
-    ui->tabchambre->setModel(modal2);
-
-    QSqlQueryModel * modal=new QSqlQueryModel();
-    //QSqlQuery query;
-    query.prepare("select * from servicech");
-    query.exec();
-    modal->setQuery(query);
-    ui->tabservicech->setModel(modal);
-
-
-    QSqlQueryModel * modal3=new QSqlQueryModel();
-
-    query.prepare("select type from servicech");
-    query.exec();
-    modal3->setQuery(query);
-
-    ui->comboBox->setModel(modal3);
-
-
-
-
-
-    QSqlQuery query3,query1,query2;
-
-    int i =0;
-    // set dark background gradient:
-    QLinearGradient gradient(0, 0, 0, 400);
-    gradient.setColorAt(0, QColor(255,255,255));
-    gradient.setColorAt(0.38, QColor(255,255,255));
-    gradient.setColorAt(1, QColor(255,255,255));
-    ui->widget->setBackground(QBrush(gradient));
-    QCPBars *fossil = new QCPBars(ui->widget->xAxis, ui->widget->yAxis);
-    QCPBars *nuclear = new QCPBars(ui->widget->xAxis, ui->widget->yAxis);
-
-    fossil->setPen(QPen(QColor(0, 0, 255).lighter(190)));
-    fossil->setBrush(QColor(255, 0, 0));
-
-    nuclear->setPen(QPen(QColor(250, 170, 20).lighter(150)));
-    nuclear->setBrush(QColor(250, 170, 20));
-    nuclear->moveAbove(fossil);
-
-    // prepare x axis with country labels:
-    QVector<double> ticks,ticks2;
-    QVector<QString> labels;
-    QVector<double> fossilData,nuclearData;
-    query3.prepare("SELECT DISTINCT numchambre FROM chambre");
-    query3.exec();
-
-
-    while(query3.next())
-    {
-        labels.append(query3.value(0).toString());
-        i++;
-        ticks.append(i);
-
-        query1.prepare("SELECT numchambre FROM chambre where numchambre = '"+query3.value(0).toString()+"' ");
-        query1.exec();
-        while (query1.next()) {
-            fossilData.append(query1.value(0).toDouble());
-        }
-        query2.prepare("SELECT prix FROM chambre where numchambre= '"+query3.value(0).toString()+"' ");
-        query2.exec();
-        while (query2.next()) {
-            nuclearData.append(query2.value(0).toDouble());
-        }
-
-    }
-
-
-
-    //ticks << 1 << 2 << 3 ;
-    //  labels << "5000" << "10000" << "15000" ;
-    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTicks(ticks, labels);
-    ui->widget->xAxis->setTicker(textTicker);
-    ui->widget->xAxis->setTickLabelRotation(60);
-    ui->widget->xAxis->setSubTicks(false);
-    ui->widget->xAxis->setTickLength(0, 4);
-    ui->widget->xAxis->setRange(0, 8);
-    ui->widget->xAxis->setBasePen(QPen(Qt::black));
-    ui->widget->xAxis->setTickPen(QPen(Qt::black));
-    ui->widget->xAxis->grid()->setVisible(true);
-    ui->widget->xAxis->grid()->setPen(QPen(QColor(130, 130, 130), 0, Qt::DotLine));
-    ui->widget->xAxis->setTickLabelColor(Qt::black);
-    ui->widget->xAxis->setLabelColor(Qt::black);
-
-    // prepare y axis:
-    ui->widget->yAxis->setRange(0, 500);
-    ui->widget->yAxis->setPadding(5); // a bit more space to the left border
-    ui->widget->yAxis->setLabel("Statistique ");
-    ui->widget->yAxis->setBasePen(QPen(Qt::black));
-    ui->widget->yAxis->setTickPen(QPen(Qt::black));
-    ui->widget->yAxis->setSubTickPen(QPen(Qt::black));
-    ui->widget->yAxis->grid()->setSubGridVisible(true);
-    ui->widget->yAxis->setTickLabelColor(Qt::black);
-    ui->widget->yAxis->setLabelColor(Qt::black);
-    ui->widget->yAxis->grid()->setPen(QPen(QColor(130, 130, 130), 0, Qt::SolidLine));
-    ui->widget->yAxis->grid()->setSubGridPen(QPen(QColor(130, 130, 130), 0, Qt::DotLine));
-
-    // Add data:
-
-
-
-    fossil->setData(ticks, fossilData);
-
-    nuclear->setData(ticks, nuclearData);
-
-
-    // setup legend:
-
-
-}
-
-void MainWindow::showTime()
-{
-    QTime time=QTime::currentTime();
-    QString time_text=time.toString("hh : mm : ss");
-    ui->Digital_clock->setText(time_text);
 }
 
 MainWindow::~MainWindow()
 {
+
     delete ui;
-}
-
-void MainWindow::on_pb_ajouter_clicked()
-{
-    int numchambre = ui->lineEdit_num->text().toInt();
-    QString type= ui->lineEdit_type->text();
-    QString prix= ui->lineEdit_prix->text();
-    QString disponibilite= ui->lineEdit_disponibilite->text();
-    QString idservice = ui->comboBox->currentText();
-    QString image = ui->lineEdit_3->text();
-
-
-    chambre l(numchambre,type,disponibilite,prix,idservice,image);
-    if ((numchambre != 0) && (prix != "") && (type != "") && (disponibilite != "") )
-    {
-        bool test=l.ajouter();
-        if(test )
-        {ui->tabchambre->setModel(tmpchambre.afficher());//refresh
-            QMessageBox::information(nullptr, QObject::tr("Ajouter une Chambre"),
-                                     QObject::tr("Chambre ajouté.\n"
-                                                 "Click Cancel to exit."), QMessageBox::Cancel);
-
-            ui->lineEdit_num->setText("");
-            ui->lineEdit_type->setText("");
-            ui->lineEdit_prix->setText("");
-            ui->lineEdit_disponibilite->setText("");
-            ui->comboBox->setCurrentText("");
-            ui->lineEdit_3->setText("");
-            ui->lblBkImge2->clear();
-            ui->lineEdit_4->setText("");
-
-        }
-    }
-    else
-    {
-
-
-        if (numchambre == 0)
-        {
-           // ui->label_12->setText("*Numero de Chambre INVALIDE!!");
-            ui->lineEdit_num->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-            QPixmap pix("C:/Users/hp/Desktop/to work on/New backup 4 +interface/MALEK/malek/image2.png");
-
-
-            ui->label_22->setPixmap(pix.scaled(215,215,Qt::KeepAspectRatio));
-
-
-        }
-
-        if (prix == "")
-        {
-            // ui->label_20->setText("*Prix INVALIDE!!");
-            ui->lineEdit_prix->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-            QPixmap pix("C:/Users/hp/Desktop/to work on/New backup 4 +interface/MALEK/malek/prix.png");
-            ui->label_20->setPixmap(pix.scaled(215,215,Qt::KeepAspectRatio));
-
-
-            QPixmap pix1("C:/Users/hp/Desktop/to work on/New backup 4 +interface/MALEK/malek/cross.png");
-
-            ui->label_26->setPixmap(pix1.scaled(215,215,Qt::KeepAspectRatio));
-
-
-
-
-
-        }
-
-        if (disponibilite == "")
-        {
-            // ui->label_21->setText("*Disponibilite INVALIDE!!");
-            QPixmap pix("C:/Users/hp/Desktop/to work on/New backup 4 +interface/MALEK/malek/dispo.png");
-            ui->label_21->setPixmap(pix.scaled(215,215,Qt::KeepAspectRatio));
-
-             //ui->lineEdit_num->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-        }
-
-
-
-    }
-}
-
-void MainWindow::on_pb_supprimer_clicked()
-{
-    int numerochambre = ui->lineEdit_num->text().toInt();
-    bool test=tmpchambre.supprimer(numerochambre);
-    if(test)
-    {ui->tabchambre->setModel(tmpchambre.afficher());//refresh
-        QMessageBox::information(nullptr, QObject::tr("Supprimer une Chambre"),
-                                 QObject::tr("Chambre supprimé.\n"
-                                             "Click Cancel to exit."), QMessageBox::Cancel);
-
-        ui->lineEdit_num->setText("");
-        ui->lineEdit_type->setText("");
-        ui->lineEdit_prix->setText("");
-        ui->lineEdit_disponibilite->setText("");
-        ui->comboBox->setCurrentText("");
-        ui->lineEdit_3->setText("");
-        ui->lblBkImge2->clear();
-        ui->lineEdit_4->setText("");
-
-    }
-    else
-        QMessageBox::critical(nullptr, QObject::tr("Supprimer une Chambre"),
-                              QObject::tr("Erreur !.\n"
-                                          "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-void MainWindow::on_pb_ajouter_2_clicked()
-{
-    int id = ui->lineEdit_id_3->text().toInt();
-    QString type= ui->lineEdit_type2->text();
-    QString dispo= ui->lineEdit_dispo->text();
-    QString prix= ui->lineEdit_prix_2->text();
-
-    Schambre e(id,type,dispo,prix);
-      if ((id != 0) && (type != "") && (dispo != "") && (prix != "") )
-      {
-    bool test=e.ajouter_2();
-    if(test)
-    {ui->tabservicech->setModel(tmpservicech.afficher());//refresh
-        QMessageBox::information(nullptr, QObject::tr("Ajouter un Service_chambre"),
-                                 QObject::tr("Service_chambre ajoutée.\n"
-                                             "Click Cancel to exit."), QMessageBox::Cancel);
-
-    }
-      }
-    else
-
-      {
-
-          if (id == 0)
-          {
-             // ui->label_12->setText("*Numero de Chambre INVALIDE!!");
-              ui->lineEdit_id_3->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-
-
-
-          }
-
-          if (type == "")
-          {
-              // ui->label_20->setText("*Prix INVALIDE!!");
-              ui->lineEdit_type2->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-
-
-
-
-
-          }
-
-          if (dispo == "")
-          {
-
-
-               ui->lineEdit_dispo->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-          }
-
-          if (prix == "")
-          {
-
-
-               ui->lineEdit_prix_2->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;  background:red");
-          }
-
-
-      }
-}
-
-void MainWindow::on_pb_supprimer_2_clicked()
-{
-    int id = ui->lineEdit_id_3->text().toInt();
-    bool test=tmpservicech.supprimer_2(id);
-    if(test)
-    {ui->tabservicech->setModel(tmpservicech.afficher());//refresh
-        QMessageBox::information(nullptr, QObject::tr("Supprimer un Service_chambre"),
-                                 QObject::tr("Service_chambre supprimée.\n"
-                                             "Click Cancel to exit."), QMessageBox::Cancel);
-
-    }
-    else
-        QMessageBox::critical(nullptr, QObject::tr("Supprimer un Service_chambre"),
-                              QObject::tr("Erreur !.\n"
-                                          "Click Cancel to exit."), QMessageBox::Cancel);
-}
-
-void MainWindow::on_pb_modifier_clicked()
-{ 
-    int numchambre = ui->lineEdit_num->text().toInt();
-    QString type= ui->lineEdit_type->text();
-    QString prix= ui->lineEdit_prix->text();
-    QString disponibilite= ui->lineEdit_disponibilite->text();
-    QString idservice = ui->comboBox->currentText();
-    QString image= ui->lineEdit_3->text();
-
-
-
-    chambre l(numchambre,type,disponibilite,prix,idservice,image);
-    bool test=l.modifier(numchambre);
-    if(test)
-    {ui->tabchambre->setModel(tmpchambre.afficher());//refresh
-        QMessageBox::information(nullptr, QObject::tr("Modifier une Chambre"),
-                                 QObject::tr("Chambre modifié.\n"
-                                             "Click Cancel to exit."), QMessageBox::Cancel);
-
-        ui->lineEdit_num->setText("");
-        ui->lineEdit_type->setText("");
-        ui->lineEdit_prix->setText("");
-        ui->lineEdit_disponibilite->setText("");
-        ui->comboBox->setCurrentText("");
-        ui->lineEdit_3->setText("");
-        ui->lblBkImge2->clear();
-        ui->lineEdit_4->setText("");
-
-    }
-    else
-        QMessageBox::critical(nullptr, QObject::tr("Modifier une Chambre"),
-                              QObject::tr("Erreur !.\n"
-                                          "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-
-void MainWindow::on_pb_modifier_4_clicked()
-{
-
-    int id = ui->lineEdit_id_3->text().toInt();
-    QString type= ui->lineEdit_type2->text();
-    QString dispo= ui->lineEdit_dispo->text();
-    QString prix= ui->lineEdit_prix_2->text();
-
-
-
-
-    Schambre e(id,type,dispo,prix);
-    bool test=e.modifier_4(id);
-    if(test)
-    {ui->tabservicech->setModel(tmpservicech.afficher());//refresh
-        QMessageBox::information(nullptr, QObject::tr("Modifier un Service_chambre"),
-                                 QObject::tr("Service_chambre modifiée.\n"
-                                             "Click Cancel to exit."), QMessageBox::Cancel);
-
-    }
-    else
-        QMessageBox::critical(nullptr, QObject::tr("Modifier Service_chambre"),
-                              QObject::tr("Erreur !.\n"
-                                          "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-void MainWindow::on_pb_rechercher_clicked()
-{
-
-    QString str=ui->lineEdit_num->text();
-    ui->tabchambre->setModel(tmpchambre.recherche(str));
-}
-
-
-
-
-void MainWindow::on_pb_modifier_5_clicked()
-{
-    QString str=ui->lineEdit_id_3->text();
-    ui->tabservicech->setModel(tmpservicech.modifier_5(str));
-}
-
-void MainWindow::on_pushButton_11_clicked()
-{
-    QSqlQueryModel * modal=new QSqlQueryModel();
-    QSqlQuery query;
-    query.prepare("select * from chambre");
-    query.exec();
-    modal->setQuery(query);
-    ui->tabchambre->setModel(modal);
-
-
-
-
-
-}
-
-
-void MainWindow::on_tabchambre_activated(const QModelIndex &index)
-{
-    QString val=ui->tabchambre->model()->data(index).toString();
-    QSqlQuery qry;
-    qry.prepare("select * from CHAMBRE where NUMCHAMBRE='"+val+"' or TYPE='"+val+"' or DISPONIBILITE='"+val+"'  or PRIX='"+val+"' or IDSERVICE='"+val+"' or IMAGE='"+val+"' ");
-
-    if (qry.exec())
-    {
-
-        while (qry.next())
-        {
-
-            ui->lineEdit_num->setText(qry.value(0).toString());
-            ui->lineEdit_type->setText(qry.value(1).toString());
-            ui->lineEdit_disponibilite->setText(qry.value(2).toString());
-            ui->lineEdit_prix->setText(qry.value(3).toString());
-            ui->comboBox->setCurrentText(qry.value(4).toString());
-            ui->lineEdit_3->setText(qry.value(5).toString());
-            // ui->chemin->setText(modquery1->value("IMAGE").toString());
-
-            QPixmap pix(ui->lineEdit_3->text());
-            int w =ui->lblBkImge2->width();
-            int h =ui->lblBkImge2->height();
-            ui->lblBkImge2->setPixmap(pix.scaled(w,h,Qt::KeepAspectRatio));
-
-
-
-        }
-
-
-    }
-    else
-    {
-        // QMessageBox::critical(this,tr("error"),qry.lastError().text());
-    }
-}
-
-
-
-
-
-
-void MainWindow::on_radioFemelle_clicked()
-{
-    ui->lineEdit_disponibilite->setText("non");
-}
-
-void MainWindow::on_radioMale_clicked()
-{
-    ui->lineEdit_disponibilite->setText("oui");
-}
-
-void MainWindow::on_tabservicech_activated(const QModelIndex &index)
-{
-
-    QString val=ui->tabservicech->model()->data(index).toString();
-    QSqlQuery qry;
-    qry.prepare("select * from servicech where ID='"+val+"' or DISPO='"+val+"' or PRIX='"+val+"' or TYPE='"+val+"'  ");
-
-    if (qry.exec())
-    {
-
-        while (qry.next())
-        {
-
-            ui->lineEdit_id_3->setText(qry.value(0).toString());
-            ui->lineEdit_type2->setText(qry.value(3).toString());
-            ui->lineEdit_dispo->setText(qry.value(1).toString());
-            ui->lineEdit_prix_2->setText(qry.value(2).toString());
-
-
-
-
-
-        }
-
-
-    }
-    else
-    {
-        // QMessageBox::critical(this,tr("error"),qry.lastError().text());
-    }
-
-}
-
-void MainWindow::on_radioMale_2_clicked()
-{
-    ui->lineEdit_dispo->setText("oui");
-}
-
-void MainWindow::on_radioFemelle_2_clicked()
-{
-    ui->lineEdit_dispo->setText("non");
 }
 
 void MainWindow::on_pushButton_clicked()
 {
-    /*  QPrinter printer;
-          QString doc;
-
-          printer.setPrinterName("printer1");
-          QPrintDialog print_dialog(&printer,this);
-         if(print_dialog.exec()== QDialog::Rejected) return ;
-
-           ui->text_id-> */
 
 
-    QString strStream;
-    QTextStream out(&strStream);
+    int id = ui->lineEdit_3->text().toInt();
+    int nbr_nuit = ui->lineEdit->text().toInt();
+    QString type_chambre = ui->comboBox->currentText();
+    QString type_reservation = ui->comboBox_2->currentText();
+    int nbr_chambre=ui->lineEdit_2->text().toInt() ;
+    QDate date_arrive = ui->dateEdit_2->date() ;
+    QDate date_sortie = ui->dateEdit->date() ;
+    QDate date3=QDate::currentDate();
+    QRegExp regex1 ("[a-z]$");
+    QRegExp regex2 ("^[a-z]");
+    QRegExp regex3 ("^[0-9]*$");
+    QString msg_id="id invalide";
+    QString msg_nbr_nuit="nbr_nuit invlaide";
+    QString msg_date_arrive="date arrivee invlide";
+    QString msg_date_sortie="date sortie invlaide";
+    QString msg_nbr_chbre="nbr chbr invlaide";
+    QString msg_vide="";
+    Reservation a ;
 
-    const int rowCount = ui->tabchambre->model()->rowCount();
-    const int columnCount = ui->tabchambre->model()->columnCount();
+    if ((id == NULL) || (id<1))
+    {
+        ui->lineEdit_3->setStyleSheet("QLineEdit { color: red;}");
+    ui->txt_id->setText(msg_id);
+    ui->txt_id->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+    a.setValide();
 
-    out <<  "<html>\n"
-            "<head>\n"
-            "<meta Content=\"Text/html; charset=Windows-1251\">\n"
-
-         <<  QString("<title>%1</title>\n").arg("col1")
-          <<  "</head>\n"
-              "  <h1>Gestion des Chambres PDF</h1>"
-              "<body bgcolor=#ac9976  link=#5000A0>\n"
-              "<table border=1 cellspacing=0 cellpadding=2 >\n";
-
-    // headers
-    out << "<thead><tr bgcolor=#aa0000>";
-    for (int column = 0; column < columnCount; column++)
-        if (!ui->tabchambre->isColumnHidden(column))
-            out << QString("<th>%1</th>").arg(ui->tabchambre->model()->headerData(column, Qt::Horizontal).toString());
-    out << "</tr></thead>\n";
-
-    // data table
-    for (int row = 0; row < rowCount; row++) {
-        out << "<tr>";
-        for (int column = 0; column < columnCount; column++) {
-            if (!ui->tabchambre->isColumnHidden(column)) {
-                QString data = ui->tabchambre->model()->data(ui->tabchambre->model()->index(row, column)).toString().simplified();
-                out << QString("<td bkcolor=0>%1</td>").arg((!data.isEmpty()) ? data : QString("&nbsp;"));
-            }
-        }
-        out << "</tr>\n";
     }
-    out <<  "</table>\n"
-            "</body>\n"
-            "</html>\n";
-
-    QTextDocument *document = new QTextDocument();
-    document->setHtml(strStream);
-
-    QPrinter printer;
-
-    QPrintDialog *dialog = new QPrintDialog(&printer, NULL);
-    if (dialog->exec() == QDialog::Accepted) {
-        document->print(&printer);
+    else
+    {ui->lineEdit_3->setStyleSheet("QLineEdit { color: black;}");
+        ui->txt_id->setText(msg_vide);
     }
+    if (( nbr_chambre== NULL) || (nbr_chambre<1))
+    {
+        ui->lineEdit_2->setStyleSheet("QLineEdit { color: red;}");
+    ui->txt_nbrch->setText(msg_nbr_chbre);
+    ui->txt_nbrch->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+    a.setValide();
 
-    delete document;
+    }
+    else
+
+    {ui->lineEdit_2->setStyleSheet("QLineEdit { color: black;}");
+        ui->txt_nbrch->setText(msg_vide);
+
+    }
+    if ((nbr_nuit == NULL) || (nbr_nuit<1))
+    {
+        ui->lineEdit->setStyleSheet("QLineEdit { color: red;}");
+    ui->txt_nbrn->setText(msg_nbr_nuit);
+    ui->txt_nbrn->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+    a.setValide();
+
+    }
+    else
+    {ui->lineEdit->setStyleSheet("QLineEdit { color: black;}");
+        ui->txt_nbrn->setText(msg_vide);
+
+    }
+    if ((date_arrive<date3))
+       {
+        ui->dateEdit_2->setStyleSheet("QLineEdit { color: red;}");
+           ui->txt_a->setText(msg_date_arrive);
+           ui->txt_a->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+           a.setValide();
+
+       }
+       else {
+        ui->dateEdit_2->setStyleSheet("QLineEdit { color: black;}");
+           ui->txt_a->setText(msg_vide);
+
+       }
+    if ((date_sortie<date_arrive))
+       {
+        ui->dateEdit->setStyleSheet("QLineEdit { color: red;}");
+           ui->txt_s->setText(msg_date_sortie);
+           ui->txt_s->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+           a.setValide();
+
+       }
+       else {
+        ui->dateEdit->setStyleSheet("QLineEdit { color: black;}");
+           ui->txt_s->setText(msg_vide);
+
+       }
+    Reservation r(id,nbr_nuit,nbr_chambre,date_arrive,date_sortie,type_chambre,type_reservation);
+   if (a.getValide()==0)
+   {
+       bool test = r.ajouter();
+
+                   ui->lineEdit_3->setStyleSheet("QLineEdit { color: green;}");
+                   ui->lineEdit_2->setStyleSheet("QLineEdit { color: green;}");
+                   ui->lineEdit->setStyleSheet("QLineEdit { color: green;}");
+                   ui->dateEdit_2->setStyleSheet("QDateEdit { color: green;}");
+                   ui->dateEdit->setStyleSheet("QDateEdit { color: green;}");
+        QSystemTrayIcon *notifyIcon = new QSystemTrayIcon;
+        notifyIcon->show();
+        notifyIcon->setIcon(QIcon("icone.png"));
+
+        notifyIcon->showMessage("GESTION RESERVATION ","reservation  ajouté",QSystemTrayIcon::Information,15000);
+  QMessageBox::information(nullptr, QObject::tr("Ajouter une reservation"),
+                    QObject::tr("reservation ajouté.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+   }
+    else {
+        QMessageBox::critical(nullptr, QObject::tr("Ajouter une reservation"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+ }
+    ui->tableView->setModel(tmpr.afficher());
+
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    int id = ui->lineEdit_3->text().toInt() ;
+
+    bool test=tmpr.supprimer(id);
+    if(test)
+    {
+        QSystemTrayIcon *notifyIcon = new QSystemTrayIcon;
+        notifyIcon->show();
+        notifyIcon->setIcon(QIcon("icone.png"));
+
+        notifyIcon->showMessage("GESTION RESERVATION ","reservation supprimé",QSystemTrayIcon::Information,15000);
+        QMessageBox::information(nullptr, QObject::tr("Supprimer une reservation"),
+                    QObject::tr("reservation supprimé.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, QObject::tr("Supprimer une reservation"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+    }
+     ui->tableView->setModel(tmpr.afficher());
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    int id = ui->lineEdit_3->text().toInt();
+    int nbr_nuit = ui->lineEdit->text().toInt();
+    QString type_chambre = ui->comboBox->currentText();
+    QString type_reservation = ui->comboBox_2->currentText();
+    int nbr_chambre=ui->lineEdit_2->text().toInt() ;
+    QDate date_arrive = ui->dateEdit_2->date() ;
+    QDate date_sortie = ui->dateEdit->date() ;
+    QDate date3=QDate::currentDate();
+
+
+    QRegExp regex1 ("[a-z]$");
+    QRegExp regex2 ("^[a-z]");
+    QRegExp regex3 ("^[0-9]*$");
+    QString msg_id="id invalide";
+    QString msg_nbr_nuit="nbr_nuit invlaide";
+    QString msg_date_arrive="date arrivee invlide";
+    QString msg_date_sortie="date sortie invlaide";
+    QString msg_nbr_chbre="nbr chbr invlaide";
+    QString msg_vide="";
+    Reservation a ;
+
+    if ((id == NULL) || (id<1))
+    {
+        ui->lineEdit_3->setStyleSheet("QLineEdit { color: red;}");
+
+    ui->txt_id->setText(msg_id);
+    ui->txt_id->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+    a.setValide();
+
+    }
+    else
+    {ui->txt_id->setText(msg_vide);
+        ui->lineEdit_3->setStyleSheet("QLineEdit { color: black;}");
+
+    }
+    if (( nbr_chambre== NULL) || (nbr_chambre<1))
+    {
+        ui->lineEdit_2->setStyleSheet("QLineEdit { color: red;}");
+
+    ui->txt_nbrch->setText(msg_nbr_chbre);
+    ui->txt_nbrch->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+    a.setValide();
+
+    }
+    else
+    {ui->txt_nbrch->setText(msg_vide);
+        ui->lineEdit_2->setStyleSheet("QLineEdit { color: black;}");
+
+    }
+    if ((nbr_nuit == NULL) || (nbr_nuit<1))
+    {
+        ui->lineEdit->setStyleSheet("QLineEdit { color: red;}");
+
+    ui->txt_nbrn->setText(msg_nbr_nuit);
+    ui->txt_nbrn->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+    a.setValide();
+
+    }
+    else
+    {ui->txt_nbrn->setText(msg_vide);
+        ui->lineEdit->setStyleSheet("QLineEdit { color: black;}");
+
+    }
+    if ((date_arrive<date3))
+       {
+        ui->dateEdit_2->setStyleSheet("QLineEdit { color: red;}");
+
+           ui->txt_a->setText(msg_date_arrive);
+           ui->txt_a->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+           a.setValide();
+
+       }
+       else {
+           ui->txt_a->setText(msg_vide);
+           ui->dateEdit_2->setStyleSheet("QLineEdit { color: black;}");
+
+       }
+    if ((date_sortie<date_arrive))
+       {         ui->dateEdit->setStyleSheet("QLineEdit { color: red;}");
+
+           ui->txt_s->setText(msg_date_sortie);
+           ui->txt_s->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+           a.setValide();
+
+       }
+       else {
+           ui->txt_s->setText(msg_vide);
+           ui->dateEdit->setStyleSheet("QLineEdit { color: black;}");
+
+       }
+    Reservation r;
+    if (a.getValide()==0){
+    bool test=r.modifier(id,nbr_nuit,nbr_chambre,date_arrive,date_sortie,type_chambre,type_reservation);
+    ui->lineEdit_3->setStyleSheet("QLineEdit { color: green;}");
+    ui->lineEdit_2->setStyleSheet("QLineEdit { color: green;}");
+    ui->lineEdit->setStyleSheet("QLineEdit { color: green;}");
+    ui->dateEdit_2->setStyleSheet("QDateEdit { color: green;}");
+    ui->dateEdit->setStyleSheet("QDateEdit { color: green;}");
+        QSystemTrayIcon *notifyIcon = new QSystemTrayIcon;
+        notifyIcon->show();
+        notifyIcon->setIcon(QIcon("icone.png"));
+
+        notifyIcon->showMessage("GESTION RESERVATION ","reservation modifié",QSystemTrayIcon::Information,15000);
+        ui->tableView->setModel(tmpr.afficher());
+
+
+
+        QMessageBox::information(nullptr, QObject::tr("Modifier reservation"),
+                    QObject::tr("reservation Modifié.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, QObject::tr("modifier resrvation"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+    }
+
+
 
 }
-
-void MainWindow::on_pushButton_2_released()
+void MainWindow::on_pushButton_5_clicked()
 {
-
-    ui->lineEdit_num->setText("");
-    ui->lineEdit_type->setText("");
-    ui->lineEdit_prix->setText("");
-    ui->lineEdit_disponibilite->setText("");
-    ui->comboBox->setCurrentText("");
-    ui->lineEdit_3->setText("");
-    ui->lblBkImge2->clear();
-    ui->lineEdit_4->setText("");
+    QString str=ui->lineEdit_4->text();
+     ui->tableView_2->setModel(tmpr.recherche_1(str));
 }
 
-/*
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::on_tabafficher_activated(const QModelIndex &index)
 {
-    dash *x = new dash;
+    QString val=ui->tableView->model()->data(index).toString();
+        QSqlQuery qry;
+        qry.prepare("select * from RESERVATION where ID='"+val+"'or TYPE_CHAMBRE='"+val+"'or TYPE_RESERVATION='"+val+"' or NBR_NUIT='"+val+"' or NBR_CHAMBRE='"+val+"' or DATE_ARRIVE='"+val+"' or DATE_SORTIE='"+val+"'");
+         if (qry.exec())
+            {
+            while (qry.next())
+            {
+                      ui->lineEdit_3->setText(qry.value(0).toString());
+                      ui->lineEdit->setText(qry.value(0).toString());
+                      ui->lineEdit_2->setText(qry.value(0).toString());
 
-    x->show();
-    this->hide();
+
+
+
+            }
+        }
+        else
+        {
+           // QMessageBox::critical(this,tr("error"),qry.lastError().text());
+        }
 }
-*/
 
 void MainWindow::on_pushButton_4_clicked()
 {
-    QString filename=QFileDialog::getOpenFileName(
-                this,
-                tr("Open File"),
-                "C://",
-                "All files (*.*);;Text File (*.txt);;Pdf File (*.pdf);;Music file(*.mp3)"
-
-
-                );
-    QDesktopServices::openUrl(QUrl("file:///"+filename,QUrl::TolerantMode));
-    // QMessageBox::information(this,tr("File Name"),filename);
-}
-
-void MainWindow::on_pushButton_5_clicked()
-{
-    QString link="www.movenpick.com/fr/africa/tunisia/tunis/hotel-du-lac-tunis/rooms/";
-    QDesktopServices::openUrl(QUrl(link));
-}
-
-/*
-QString test_tri (int c)
-{
-    if (c==0)
-    {
-        return "numchambre";
+    if (ui->radioButton->isChecked()){
+    ui->tableView->setModel(tmpr.afficher());
+    ui->tableView->setModel(tmpr.trier());
     }
-    else if (c==1)
-    {
-        return  "type";
-    }
-    else if (c==2)
-    {
-        return  "disponibilite";
-    }
-    return "NULL";
+    else
+        if (ui->radioButton_2->isChecked())
+        {
+            ui->tableView->setModel(tmpr.afficher());
+            ui->tableView->setModel(tmpr.trier3());
 }
-*/
+}
 
-void MainWindow::on_pushButton_6_released()
+
+
+
+void MainWindow::on_pushButton_6_clicked()
 {
-    //QString col=test_tri(i);
-    QSqlQueryModel * model = new QSqlQueryModel();
 
-    model->setQuery("SELECT * FROM CHAMBRE ORDER BY numchambre ASC");
-    model->setHeaderData(0, Qt::Vertical, QObject::tr("numchambre"));
-    model->setHeaderData(1, Qt::Vertical, QObject::tr("type"));
-    model->setHeaderData(2, Qt::Vertical, QObject::tr("disponibilite"));
-    model->setHeaderData(3, Qt::Vertical, QObject::tr("prix"));
-    model->setHeaderData(4, Qt::Vertical, QObject::tr("image"));
-    ui->tabchambre->setModel(model);
-    ui->tabchambre->show();
+     int id_facture = ui->lineEdit_5->text().toInt();
 
+     int prix = ui->lineEdit_6->text().toInt() ;
+     QString type_paiment= ui->comboBox_3->currentText() ;
+     QRegExp regex1 ("[a-z]$");
+     QRegExp regex2 ("^[a-z]");
+     QRegExp regex3 ("^[0-9]*$");
+     QString msg_id_facture="id_facture invalide";
+     QString msg_prix="prix invlaide";
+     QString msg_vide="";
+     Reglement a ;
+
+     if ((id_facture == NULL) || (id_facture<1))
+     {
+         ui->lineEdit_5->setStyleSheet("QLineEdit { color: red;}");
+     ui->txtfac->setText(msg_id_facture);
+     ui->txtfac->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+     a.setValide();
+
+     }
+     else
+     {ui->lineEdit_5->setStyleSheet("QLineEdit { color: black;}");
+         ui->txtfac->setText(msg_vide);
+     }
+     if (( prix== NULL) || (prix<1))
+     {
+         ui->lineEdit_6->setStyleSheet("QLineEdit { color: red;}");
+     ui->txtprix->setText(msg_prix);
+     ui->txtprix->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+     a.setValide();
+
+     }
+     else
+
+     {ui->lineEdit_6->setStyleSheet("QLineEdit { color: black;}");
+         ui->txtprix->setText(msg_vide);
+
+     }
+
+     Reglement r(id_facture,prix,type_paiment);
+     if (a.getValide()==0)
+     {
+         bool test = r.ajouter2();
+
+                     ui->lineEdit_5->setStyleSheet("QLineEdit { color: green;}");
+                     ui->lineEdit_6->setStyleSheet("QLineEdit { color: green;}");
+
+
+   QMessageBox::information(nullptr, QObject::tr("Ajouter une reglement"),
+                     QObject::tr("reglement ajouté.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+   }
+     else {
+         QMessageBox::critical(nullptr, QObject::tr("Ajouter une reglement"),
+                     QObject::tr("Erreur !.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+
+     ui->tableView_3->setModel(abc.afficher2());
 }
+ }
 
-void MainWindow::on_pushButton_7_clicked()
+
+void MainWindow::on_tableView_activated(const QModelIndex &index)
 {
-    ui->lineEdit_id_3->setText("");
-    ui->lineEdit_type2->setText("");
-    ui->lineEdit_prix_2->setText("");
-    ui->lineEdit_dispo->setText("");
+    QString val=ui->tableView->model()->data(index).toString();
+        QSqlQuery qry;
+        qry.prepare("select * from RESERVATION where ID='"+val+"'");
+        if(qry.exec())
+        {
+            while(qry.next())
+            {
+
+                ui->lineEdit_3->setText(qry.value(0).toString());
+                ui->lineEdit->setText(qry.value(1).toString());
+                ui->lineEdit_2->setText(qry.value(2).toString());
+                ui->dateEdit_2->setDate(qry.value(3).toDate());
+                ui->dateEdit->setDate(qry.value(4).toDate());
+               ui->comboBox->setCurrentText(qry.value(5).toString());
+                ui->comboBox_2->setCurrentText(qry.value(6).toString());
+
+
+
 
 }
 
-
-void MainWindow::on_pushButton_8_clicked()
-{
-    /*  QPrinter printer;
-      QString doc;
-
-      printer.setPrinterName("printer1");
-      QPrintDialog print_dialog(&printer,this);
-     if(print_dialog.exec()== QDialog::Rejected) return ;
-
-       ui->text_id-> */
-
-
-    QString strStream;
-    QTextStream out(&strStream);
-
-    const int rowCount = ui->tabservicech->model()->rowCount();
-    const int columnCount = ui->tabservicech->model()->columnCount();
-
-    out <<  "<html>\n"
-            "<head>\n"
-            "<meta Content=\"Text/html; charset=Windows-1251\">\n"
-         <<  QString("<title>%1</title>\n").arg("col1")
-          <<  "</head>\n"
-              "<body bgcolor=#ffffff link=#5000A0>\n"
-              "<table border=1 cellspacing=0 cellpadding=2>\n";
-
-    // headers
-    out << "<thead><tr bgcolor=#f0f0f0>";
-    for (int column = 0; column < columnCount; column++)
-        if (!ui->tabservicech->isColumnHidden(column))
-            out << QString("<th>%1</th>").arg(ui->tabservicech->model()->headerData(column, Qt::Horizontal).toString());
-    out << "</tr></thead>\n";
-
-    // data table
-    for (int row = 0; row < rowCount; row++) {
-        out << "<tr>";
-        for (int column = 0; column < columnCount; column++) {
-            if (!ui->tabservicech->isColumnHidden(column)) {
-                QString data = ui->tabservicech->model()->data(ui->tabservicech->model()->index(row, column)).toString().simplified();
-                out << QString("<td bkcolor=0>%1</td>").arg((!data.isEmpty()) ? data : QString("&nbsp;"));
-            }
-        }
-        out << "</tr>\n";
-    }
-    out <<  "</table>\n"
-            "</body>\n"
-            "</html>\n";
-
-    QTextDocument *document = new QTextDocument();
-    document->setHtml(strStream);
-
-    QPrinter printer;
-
-    QPrintDialog *dialog = new QPrintDialog(&printer, NULL);
-    if (dialog->exec() == QDialog::Accepted) {
-        document->print(&printer);
-    }
-
-    delete document;
 }
-
-void MainWindow::on_pushButton_9_clicked()
-{
-    QString filename=QFileDialog::getOpenFileName(
-                this,
-                tr("Open File"),
-                "C://",
-                "All files (*.*);;Text File (*.txt);;Pdf File (*.pdf);;Music file(*.mp3)"
+        else
+            QMessageBox::critical(nullptr, QObject::tr("Ajouter une reglement"),
+                        QObject::tr("Erreur !.\n"
+                                    "Click Cancel to exit."), QMessageBox::Cancel);
 
 
-                );
-    QDesktopServices::openUrl(QUrl("file:///"+filename,QUrl::TolerantMode));
-    // QMessageBox::information(this,tr("File Name"),filename);
 }
-
-
-
-void MainWindow::on_pushButton_10_released()
-{
-    QSqlQueryModel * model = new QSqlQueryModel();
-
-    model->setQuery("SELECT * FROM SERVICECH ORDER BY id ASC");
-    model->setHeaderData(0, Qt::Vertical, QObject::tr("id"));
-    model->setHeaderData(1, Qt::Vertical, QObject::tr("dispo"));
-    model->setHeaderData(2, Qt::Vertical, QObject::tr("prix"));
-    model->setHeaderData(3, Qt::Vertical, QObject::tr("type"));
-
-    ui->tabservicech->setModel(model);
-    ui->tabservicech->show();
-}
-
-
-
-
-
-
-
-
 
 
 
 void MainWindow::on_pushButton_12_clicked()
 {
-   /* QSqlQueryModel * modal2=new QSqlQueryModel();
-    QSqlQuery query;
-    query.prepare("select * from chambre");
-    query.exec();
-    modal2->setQuery(query);
-    ui->tabchambre->setModel(modal2);
-
-    QSqlQueryModel * modal=new QSqlQueryModel();
-    //QSqlQuery query;
-    query.prepare("select * from servicech");
-    query.exec();
-    modal->setQuery(query);
-    ui->tabservicech->setModel(modal);
-
-
-    QSqlQueryModel * modal3=new QSqlQueryModel();
-
-    query.prepare("select type from servicech");
-    query.exec();
-    modal3->setQuery(query);
-
-    ui->comboBox->setModel(modal3);
-*/
+    //QDateTime datecreation = date.currentDateTime();
+            //QString afficheDC = "Date de Creation PDF : " + datecreation.toString() ;
+                   QPdfWriter pdf("C:/Users/ISSAM/Desktop/facture.pdf");
+                   QPainter painter(&pdf);
+                  int i = 4000;
+                       painter.setPen(Qt::blue);
+                       painter.setFont(QFont("Arial", 30));
+                       painter.drawText(1100,1200,"FACTURE");
+                       painter.setPen(Qt::black);
+                       painter.setFont(QFont("Arial", 15));
+                      // painter.drawText(1100,2000,afficheDC);
+                       painter.drawRect(100,100,7300,2600);
+                       //painter.drawPixmap(QRect(7600,70,2000,2600),QPixmap("C:/Users/RH/Desktop/projecpp/image/logopdf.png"));
+                       painter.drawRect(0,3000,9600,500);
+                       painter.setFont(QFont("Arial", 9));
+                       painter.drawText(200,3300,"ID_FACTURE");
+                       painter.drawText(1300,3300,"PRIX");
+                       painter.drawText(2100,3300,"TYPE_PAIMENT");
 
 
+                       QSqlQuery query;
+                       query.prepare("  select * from REGLEMENT");
+                       query.exec();
+                       while (query.next())
+                       {
+                           painter.drawText(200,i,query.value(0).toString());
+                           painter.drawText(1300,i,query.value(1).toString());
+                           painter.drawText(2200,i,query.value(2).toString());
+
+
+                          i = i + 500;
+                       }
+                       int reponse = QMessageBox::question(this, "Génerer PDF", "<PDF Enregistré>...Vous Voulez Affichez Le PDF ?", QMessageBox::Yes |  QMessageBox::No);
+                           if (reponse == QMessageBox::Yes)
+                           {
+                               QMessageBox::information(nullptr, QObject::tr("Ajouter une facture"),
+                                                 QObject::tr("facture ajouté.\n"
+                                                             "Click Cancel to exit."), QMessageBox::Cancel);
+                               painter.end();
+                           }
+                           if (reponse == QMessageBox::No)
+                           {
+                                painter.end();
+                           }
 }
 
-
-
-
-
-void MainWindow::on_comboBox_currentIndexChanged(const QString &arg1)
+void MainWindow::on_pushButton_9_clicked()
 {
-    /*
-    QString val=ui->comboBox->currentText();
+
+       int id_facture = ui->lineEdit_5->text().toInt();
+       int prix= ui->lineEdit_6->text().toInt();
+       QString type_paiment = ui->comboBox_3->currentText();
+
+       QRegExp regex1 ("[a-z]$");
+       QRegExp regex2 ("^[a-z]");
+       QRegExp regex3 ("^[0-9]*$");
+       QString msg_id_facture="id_facture invalide";
+       QString msg_prix="prix invlaide";
+       QString msg_vide="";
+       Reglement a ;
+       if ((id_facture == NULL) || (id_facture<1))
+       {
+           ui->lineEdit_5->setStyleSheet("QLineEdit { color: red;}");
+       ui->txtfac->setText(msg_id_facture);
+       ui->txtfac->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+       a.setValide();
+
+       }
+       else
+       {ui->lineEdit_5->setStyleSheet("QLineEdit { color: black;}");
+           ui->txtfac->setText(msg_vide);
+       }
+       if (( prix== NULL) || (prix<1))
+       {
+           ui->lineEdit_6->setStyleSheet("QLineEdit { color: red;}");
+       ui->txtprix->setText(msg_prix);
+       ui->txtprix->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+       a.setValide();
+
+       }
+       else
+
+       {ui->lineEdit_6->setStyleSheet("QLineEdit { color: black;}");
+           ui->txtprix->setText(msg_vide);
+
+       }
+       Reglement r;
+ if (a.getValide()==0)       {
+           bool test=r.modifier2(id_facture,prix,type_paiment);
+           ui->lineEdit_5->setStyleSheet("QLineEdit { color: green;}");
+           ui->lineEdit_6->setStyleSheet("QLineEdit { color: green;}");
+   ui->tableView_3->setModel(abc.afficher2());
 
 
 
+           QMessageBox::information(nullptr, QObject::tr("Modifier facture"),
+                       QObject::tr("facture Modifié.\n"
+                                   "Click Cancel to exit."), QMessageBox::Cancel);
 
-    //QSqlQueryModel * modal=new QSqlQueryModel();
-      QSqlQuery query;
-      query.prepare("select type from servicech where type= '"+val+"' ");
+       }
+       else
+       {
+           QMessageBox::critical(nullptr, QObject::tr("modifier facture"),
+                       QObject::tr("Erreur !.\n"
+                                   "Click Cancel to exit."), QMessageBox::Cancel);
+       }
 
-    if(query.exec())
-    {
-        while (query.next())
-        {
-            ui->lineEdit_idservice->setText(val);
-        }
-    }
-*/
+
 
 }
 
+void MainWindow::on_pushButton_8_clicked()
+{
+    ui->tableView_3->setModel(abc.afficher2());
+    ui->tableView_3->setModel(abc.trier2());
+}
+
+void MainWindow::on_pushButton_10_clicked()
+{
+    QString str=ui->lineEdit_7->text();
+     ui->tableView_4->setModel(abc.recherchee_2(str));
+}
+
+void MainWindow::on_pushButton_7_clicked()
+{
+    int id_facture = ui->lineEdit_5->text().toInt() ;
+
+    bool test=abc.supprimer2(id_facture);
+    if(test)
+    {
+        QMessageBox::information(nullptr, QObject::tr("Supprimer une facture"),
+                    QObject::tr("facture supprimé.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, QObject::tr("Supprimer une facture"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+    }
+     ui->tableView_3->setModel(abc.afficher2());
+}
+
+void MainWindow::on_tableView_3_activated(const QModelIndex &index)
+{
+    QString val=ui->tableView_3->model()->data(index).toString();
+        QSqlQuery qry;
+        qry.prepare("select * from REGLEMENT where ID_FACTURE='"+val+"'");
+        if(qry.exec())
+        {
+            while(qry.next())
+            {
+
+                ui->lineEdit_5->setText(qry.value(0).toString());
+                ui->lineEdit_6->setText(qry.value(1).toString());
+                ui->comboBox_3->setCurrentText(qry.value(6).toString());
+
+
+
+
+}
+
+}
+        else
+            QMessageBox::critical(nullptr, QObject::tr("Ajouter une reglement"),
+                        QObject::tr("Erreur !.\n"
+                                    "Click Cancel to exit."), QMessageBox::Cancel);
+
+
+}
+
+void MainWindow::on_pushButton_11_clicked()
+{
+    //QDateTime datecreation = date.currentDateTime();
+            //QString afficheDC = "Date de Creation PDF : " + datecreation.toString() ;
+                   QPdfWriter pdf("C:/Users/ISSAM/Desktop/reservation.pdf");
+                   QPainter painter(&pdf);
+                  int i = 4000;
+                       painter.setPen(Qt::blue);
+                       painter.setFont(QFont("Arial", 30));
+                       painter.drawText(1100,1200,"RESERVATION");
+                       painter.setPen(Qt::black);
+                       painter.setFont(QFont("Arial", 15));
+                      // painter.drawText(1100,2000,afficheDC);
+                       painter.drawRect(100,100,7300,2600);
+                       //painter.drawPixmap(QRect(7600,70,2000,2600),QPixmap("C:/Users/RH/Desktop/projecpp/image/logopdf.png"));
+                       painter.drawRect(0,3000,9600,500);
+                       painter.setFont(QFont("Arial", 9));
+                       painter.drawText(200,3300,"ID");
+                       painter.drawText(900,3300,"NBR_NUIT");
+                       painter.drawText(1700,3300,"NBR_CHAMBRE");
+                       painter.drawText(3000,3300,"DATE_ARRIVEE");
+                       painter.drawText(4300,3300,"DATE_SORTIE");
+                       painter.drawText(5500,3300,"TYPE_CHAMBRE");
+                       painter.drawText(7100,3300,"TYPE_RESERVATION");
+
+
+
+
+                       QSqlQuery query;
+                       query.prepare("  select * from RESERVATION");
+                       query.exec();
+                       while (query.next())
+                       {
+                           painter.drawText(200,i,query.value(0).toString());
+                           painter.drawText(900,i,query.value(1).toString());
+                           painter.drawText(1700,i,query.value(2).toString());
+                           painter.drawText(3000,i,query.value(3).toString());
+                           painter.drawText(4300,i,query.value(4).toString());
+                           painter.drawText(5500,i,query.value(5).toString());
+                           painter.drawText(7100,i,query.value(6).toString());
+
+
+
+                          i = i + 500;
+                       }
+                       int reponse = QMessageBox::question(this, "Génerer PDF", "<PDF Enregistré>...Vous Voulez Affichez Le PDF ?", QMessageBox::Yes |  QMessageBox::No);
+                           if (reponse == QMessageBox::Yes)
+                           {
+                               QMessageBox::information(nullptr, QObject::tr("Ajouter une reservation"),
+                                                 QObject::tr("reservation ajouté.\n"
+                                                             "Click Cancel to exit."), QMessageBox::Cancel);
+                               painter.end();
+                           }
+                           if (reponse == QMessageBox::No)
+                           {
+                                painter.end();
+                           }
+}
 
 void MainWindow::on_pushButton_13_clicked()
 {
-    QString imageFile = QFileDialog ::getOpenFileName(0,"Select Image","/home/","Image Files (*.jpg)");
-
-    QFileInfo info(imageFile);
-    //QString salma = info.fileName();
-    QPixmap image (imageFile);
-
-    ui->lblBkImge->setPixmap(image);
-    ui->lblBkImge->show();
-    ui->lineEdit->setText(imageFile);
-    ui->lblBkImge->setPixmap(image);
+    ui->tableView_3->setModel(abc.afficher2());
 }
 
 void MainWindow::on_pushButton_14_clicked()
 {
-    QString imageFile = QFileDialog ::getOpenFileName(0,"Select Image","/home/","Image Files (*.jpg)");
+    ui->tableView->setModel(tmpr.afficher());
 
-    QFileInfo info(imageFile);
-    //QString salma = info.fileName();
-    QPixmap image (imageFile);
-
-    ui->lblBkImge1->setPixmap(image);
-    ui->lblBkImge1->show();
-    ui->lineEdit_2->setText(imageFile);
-    ui->lblBkImge1->setPixmap(image);
-}
-
-void MainWindow::on_pushButton_15_clicked()
-{
-
-    QString imageFile = QFileDialog ::getOpenFileName(0,"Select Image","/home/","Image Files (*.jpg)");
-
-    QFileInfo info(imageFile);
-    //QString salma = info.fileName();
-    QPixmap image (imageFile);
-
-    ui->lblBkImge2->setPixmap(image);
-    ui->lblBkImge2->show();
-    ui->lineEdit_3->setText(imageFile);
-    ui->lblBkImge2->setPixmap(image);
-}
-
-
-
-
-
-void MainWindow::on_radioButton_clicked()
-{
-    on_pushButton_6_released();
-}
-
-
-
-void MainWindow::on_pushButton_16_released()
-{
-    //QString col=test_tri(i);
-    QSqlQueryModel * model = new QSqlQueryModel();
-
-    model->setQuery("SELECT * FROM CHAMBRE ORDER BY prix asc");
-    model->setHeaderData(0, Qt::Vertical, QObject::tr("numchambre"));
-    model->setHeaderData(1, Qt::Vertical, QObject::tr("type"));
-    model->setHeaderData(2, Qt::Vertical, QObject::tr("disponibilite"));
-    model->setHeaderData(3, Qt::Vertical, QObject::tr("prix"));
-    model->setHeaderData(4, Qt::Vertical, QObject::tr("image"));
-
-    ui->tabchambre->setModel(model);
-    ui->tabchambre->show();
-}
-
-void MainWindow::on_radioButton_2_clicked()
-{
-    on_pushButton_16_released();
-}
-
-
-
-
-/*
-void MainWindow::on_comboBox_2_currentIndexChanged(const QString &arg1)
-{
-
-    QSqlQueryModel * modal1=new QSqlQueryModel();
- QSqlQuery query;
-   query.prepare("select type from chambre");
-   query.exec();
-   modal1->setQuery(query);
-
-   ui->comboBox_2->setModel(modal1);
-
-
-
-   QAbstractItemModel * m = ui->comboBox_2->model();
-   QString whereClause = m->data(m->index(ui->comboBox_2->currentIndex(),1)).toString();
-
-   QSqlQuery * modquery1 = new QSqlQuery();
-
-   modquery1->prepare("select * from chambre where type = '"+whereClause+"';");
-   modquery1->exec();
-}
-
-*/
-
-void MainWindow::on_comboBox_3_currentIndexChanged(const QString &arg1)
-{
-    QString tii=ui->comboBox_3->currentText();
-
-
-    ui->lineEdit_type->setText(tii);
-}
-
-
-
-
-void MainWindow::on_pushButton_17_clicked()
-{
-
-    dash *x = new dash;
-
-    x->show();
-    this->hide();
-
-}
-
-void MainWindow::on_pushButton_malek_clicked()
-{
-    statistiques *x = new statistiques;
-
-    x->show();
-    //this->hide();
-}
-
-
-
-void MainWindow::on_comboBox_4_currentTextChanged(const QString &arg1)
-{
-
-    QString tii=ui->comboBox_4->currentText();
-
-
-    ui->lineEdit_type2->setText(tii);
-}
-
-void MainWindow::on_lineEdit_4_textChanged(const QString &arg1)
-{
-    chambre c;
-    c.clearTable(ui->tabchambre);
-    int mat=ui->lineEdit_4->text().toInt();
-    c.searchRegexp(ui->tabchambre,mat);
-}
-
-
-void MainWindow::on_pushButton_3_released()
-{
-    QSqlQueryModel * model = new QSqlQueryModel();
-
-    model->setQuery("SELECT * FROM SERVICECH ORDER BY prix ASC");
-    model->setHeaderData(0, Qt::Vertical, QObject::tr("id"));
-    model->setHeaderData(1, Qt::Vertical, QObject::tr("dispo"));
-    model->setHeaderData(2, Qt::Vertical, QObject::tr("prix"));
-    model->setHeaderData(3, Qt::Vertical, QObject::tr("type"));
-
-    ui->tabservicech->setModel(model);
-    ui->tabservicech->show();
-}
-
-void MainWindow::on_radioButton_3_clicked()
-{
-    on_pushButton_10_released();
-}
-
-void MainWindow::on_radioButton_4_clicked()
-{
-    on_pushButton_3_released();
-}
-
-void MainWindow::on_pushButton_17_released()
-{
-    dash *x = new dash;
-
-    x->show();
-    this->hide();
-}
-
-void MainWindow::on_pushButton_18_clicked()
-{
-
-    webcam *x = new webcam;
-
-    x->show();
-    //this->hide();
-}
-
-void MainWindow::on_pushButton_19_clicked()
-{
-
-
-    ui->lineEdit_num->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;background: qradialgradient(cx: 0.3, cy: -0.4,fx: 0.0, fy: -0.0,radius: 1.89, stop: 0 #ffffff, stop: 1 #999);");
-    ui->lineEdit_prix->setStyleSheet(" border-radius:9px; border: 2px solid #b50000;background: qradialgradient(cx: 0.3, cy: -0.4,fx: 0.0, fy: -0.0,radius: 1.89, stop: 0 #ffffff, stop: 1 #999);");
-
-
-ui->label_22->clear();
-ui->label_21->clear();
-ui->label_20->clear();
-
-
-
-
-
-
-
-
-}
-
-void MainWindow::on_pushButton_20_clicked()
-{
-    settings *x = new settings;
-    x->show();
-   // this->hide();
-
-}
-
-void MainWindow::on_mode_jour_clicked()
-{
-
-    QPixmap pix("C:/Users/hp/Desktop/to work on/New backup 4 +interface/MALEK/malek/az.png");
-
-
-    ui->label_mask->setPixmap(pix.scaled(215,215,Qt::KeepAspectRatio));
-}
-
-
-
-void MainWindow::on_mode_nuit_clicked()
-{
-    QPixmap pix("C:/Users/hp/Desktop/to work on/New backup 4 +interface/MALEK/malek/mask.png");
-
-
-    ui->label_mask->setPixmap(pix.scaled(1800,1800,Qt::KeepAspectRatio));
-}
-
-
-
-
-void MainWindow::on_lineEdit_5_textChanged(const QString &arg1)
-{
-    Schambre c;
-    c.clearTable(ui->tabservicech);
-    int mat=ui->lineEdit_5->text().toInt();
-    c.searchRegexp(ui->tabservicech,mat);
-}
-
-
-
-void MainWindow::on_pushButton_convert_clicked()
-{
-
-    mainwindoweuro *x = new mainwindoweuro;
-    x->show();
 }
