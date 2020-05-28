@@ -1,653 +1,695 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "activite.h"
-#include "evenement.h"
+#include "reservation.h"
 #include <QMessageBox>
+#include "reglement.h"
+#include <QPixmap>
 #include <QSqlQuery>
-#include <QtPrintSupport/QPrinter>
-#include <QtPrintSupport/QPrintDialog>
-#include <iostream>
-#include "C:\Users\ASUS\Desktop\test\projet2020\src\SmtpMime"
-#include "smtp.h"
+#include <QSqlQueryModel>
+#include<QPainter>
+#include<QPdfWriter>
+#include<QtWidgets>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-ui->setupUi(this);
-ui->tablivre->setModel(tmplivre.afficher());
-ui->tabetagere->setModel(tmpetagere.afficher());
-connect(ui->sendBtn, SIGNAL(clicked()),this, SLOT(sendMail()));
-connect(ui->exitBtn, SIGNAL(clicked()),this, SLOT(close()));
+
+    ui->setupUi(this);
+    QPixmap pix("C:/Users/ISSAM/Desktop/app.png");
+    int w =ui->pic->width();
+    int h =ui->pic->height();
+      ui->pic->setPixmap(pix.scaled(w,h,Qt::KeepAspectRatio));
+     ui->tableView->setModel(tmpr.afficher());
+     ui->tableView_3->setModel(abc.afficher2());
+
+
 }
 
 MainWindow::~MainWindow()
 {
+
     delete ui;
 }
 
-void MainWindow::on_pb_ajouter_clicked()
+void MainWindow::on_pushButton_clicked()
 {
 
- /*   if(ui->lineEdit_id_activite->text().isEmpty() || ui->lineEdit_type->text().isEmpty() || ui->lineEdit_duree->text().isEmpty()|| ui->lineEdit_lieux->text().isEmpty() || ui->lineEdit_responsable->text().isEmpty()){
-        QMessageBox ok;
-        ok.setWindowTitle("Erreur");
-        ok.setText("Ajout échoué! Veuillez remplir tous les champs.");
-        ok.setStandardButtons(QMessageBox::Ok);
-        ok.exec();
 
-        return;
-    }*/
+    int id = ui->lineEdit_3->text().toInt();
+    int nbr_nuit = ui->lineEdit->text().toInt();
+    QString type_chambre = ui->comboBox->currentText();
+    QString type_reservation = ui->comboBox_2->currentText();
+    int nbr_chambre=ui->lineEdit_2->text().toInt() ;
+    QDate date_arrive = ui->dateEdit_2->date() ;
+    QDate date_sortie = ui->dateEdit->date() ;
+    QDate date3=QDate::currentDate();
+    QRegExp regex1 ("[a-z]$");
+    QRegExp regex2 ("^[a-z]");
+    QRegExp regex3 ("^[0-9]*$");
+    QString msg_id="id invalide";
+    QString msg_nbr_nuit="nbr_nuit invlaide";
+    QString msg_date_arrive="date arrivee invlide";
+    QString msg_date_sortie="date sortie invlaide";
+    QString msg_nbr_chbre="nbr chbr invlaide";
+    QString msg_vide="";
+    Reservation a ;
 
-    if(ui->lineEdit_id_activite->text().isEmpty() || ui->lineEdit_type->text().isEmpty() || ui->lineEdit_duree->text().isEmpty() || ui->lineEdit_lieux->text().isEmpty() || ui->lineEdit_responsable->text().isEmpty()){
-
-
-        if(ui->lineEdit_id_activite->text().isEmpty()){
-            ui->lineEdit_id_activite->setPlaceholderText("erreur");
-            ui->lineEdit_id_activite->setStyleSheet("background: red");
-        }else
-        { ui->lineEdit_id_activite->setPlaceholderText("");
-            ui->lineEdit_id_activite->setStyleSheet("background: white");}
-
-        if(ui->lineEdit_type->text().isEmpty()){ui->lineEdit_type->setPlaceholderText("erreur");
-           ui->lineEdit_type->setStyleSheet("background: red");
-        }else
-        { ui->lineEdit_type->setPlaceholderText("");
-            ui->lineEdit_type->setStyleSheet("background: white");}
-
-        if(ui->lineEdit_duree->text().isEmpty()){ui->lineEdit_duree->setPlaceholderText("erreur");
-           ui->lineEdit_duree->setStyleSheet("background: red");
-        }else
-         {ui->lineEdit_duree->setPlaceholderText("");
-            ui->lineEdit_duree->setStyleSheet("background: white");}
-
-        if(ui->lineEdit_responsable->text().isEmpty()){ui->lineEdit_responsable->setPlaceholderText("erreur");
-           ui->lineEdit_responsable->setStyleSheet("background: red");
-        }else
-         {ui->lineEdit_responsable->setPlaceholderText("");
-            ui->lineEdit_responsable->setStyleSheet("background: white");}
-
-        if(ui->lineEdit_lieux->text().isEmpty()){ui->lineEdit_lieux->setPlaceholderText("erreur");
-           ui->lineEdit_lieux->setStyleSheet("background: red");
-        }else
-        {ui->lineEdit_lieux->setPlaceholderText("");
-            ui->lineEdit_lieux->setStyleSheet("background: white");}
-
-
-        QMessageBox ok;
-            ok.setWindowTitle("Erreur");
-            ok.setText("Ajout échoué! Veuillez remplir tous les champs.");
-            ok.setStandardButtons(QMessageBox::Ok);
-            ok.exec();
-
-            return;
-        }
-
-
-
-
-/*ui->lineEdit_duree->setPlaceholderText(" ");
-ui->lineEdit_id_activite->setPlaceholderText(" ") ;
-ui->lineEdit_type->setPlaceholderText(" ") ;
-*/
-
-
-
-
-    int id_activite = ui->lineEdit_id_activite->text().toInt();
-    QString type= ui->lineEdit_type->text();
-    QString duree= ui->lineEdit_duree->text();
-    QString lieux= ui->lineEdit_lieux->text();
-    QString responsable= ui->lineEdit_responsable->text();
-
-  activite l(id_activite,type,duree,lieux,responsable);
-  bool test=l.ajouter();
-  if(test)
-{ui->tablivre->setModel(tmplivre.afficher());//refresh
-QMessageBox::information(nullptr, QObject::tr("Ajouter une activite"),
-                  QObject::tr("Activite ajoutée.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-   foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
-   le->clear();
-   le->setPlaceholderText("");
-   le->setStyleSheet("background: white");
-                                                      }
-
-}
-  else
-
-      QMessageBox::critical(nullptr, QObject::tr("Ajouter une activite"),
-                  QObject::tr("Erreur !.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-void MainWindow::on_pb_supprimer_clicked()
-{
-int id_activite = ui->lineEdit_id_activite->text().toInt();
-bool test=tmplivre.supprimer(id_activite);
-if(test)
-{ui->tablivre->setModel(tmplivre.afficher());//refresh
-    QMessageBox::information(nullptr, QObject::tr("Supprimer une activite"),
-                QObject::tr("Activite supprimée.\n"
-                            "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-    ui->lineEdit_id_activite->show();
-    foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
-    le->clear();
-    }
-
-
-}
-else
-    QMessageBox::critical(nullptr, QObject::tr("Supprimer une activite"),
-                QObject::tr("Erreur !.\n"
-                            "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-void MainWindow::on_pb_ajouter_2_clicked()
-{
-
-    if(ui->lineEdit_id_evenement->text().isEmpty() || /*ui->lineEdit_type_2->text().isEmpty() || ui->lineEdit_date->text().isEmpty()||*/ ui->lineEdit_salle->text().isEmpty() || ui->lineEdit_disponibilite->text().isEmpty() || ui->lineEdit_prix->text().isEmpty() || ui->lineEdit_nombre_personnes->text().isEmpty()){
-
-
-        if(ui->lineEdit_id_evenement->text().isEmpty()){
-            ui->lineEdit_id_evenement->setPlaceholderText("erreur");
-            ui->lineEdit_id_evenement->setStyleSheet("background: red");
-        }else
-        { ui->lineEdit_id_evenement->setPlaceholderText("");
-            ui->lineEdit_id_evenement->setStyleSheet("background: white");}
-
-       /* if(ui->lineEdit_date->text().isEmpty()){ui->lineEdit_date->setPlaceholderText("erreur");
-           ui->lineEdit_date->setStyleSheet("background: red");
-        }else
-        { ui->lineEdit_date->setPlaceholderText("");
-            ui->lineEdit_date->setStyleSheet("background: white");}*/
-
-        if(ui->lineEdit_salle->text().isEmpty()){ui->lineEdit_salle->setPlaceholderText("erreur");
-           ui->lineEdit_salle->setStyleSheet("background: red");
-        }else
-         {ui->lineEdit_salle->setPlaceholderText("");
-            ui->lineEdit_salle->setStyleSheet("background: white");}
-
-        if(ui->lineEdit_prix->text().isEmpty()){ui->lineEdit_prix->setPlaceholderText("erreur");
-           ui->lineEdit_prix->setStyleSheet("background: red");
-        }else
-         {ui->lineEdit_prix->setPlaceholderText("");
-            ui->lineEdit_prix->setStyleSheet("background: white");}
-
-        if(ui->lineEdit_nombre_personnes->text().isEmpty()){ui->lineEdit_nombre_personnes->setPlaceholderText("erreur");
-           ui->lineEdit_nombre_personnes->setStyleSheet("background: red");
-        }else
-        {ui->lineEdit_nombre_personnes->setPlaceholderText("");
-            ui->lineEdit_nombre_personnes->setStyleSheet("background: white");}
-        if(ui->lineEdit_disponibilite->text().isEmpty()){ui->lineEdit_disponibilite->setPlaceholderText("erreur");
-           ui->lineEdit_disponibilite->setStyleSheet("background: red");
-        }else
-        {ui->lineEdit_disponibilite->setPlaceholderText("");
-            ui->lineEdit_disponibilite->setStyleSheet("background: white");}
-
-
-
-        QMessageBox ok;
-            ok.setWindowTitle("Erreur");
-            ok.setText("Ajout échoué! Veuillez remplir tous les champs.");
-            ok.setStandardButtons(QMessageBox::Ok);
-            ok.exec();
-
-            return;
-        }
-
-
-
-
-
-    int id_evenement = ui->lineEdit_id_evenement->text().toInt();
-    QString type= ui->sexe->currentText();
-    //QString type= ui->lineEdit_type_2->text();
-    //QString date_= ui->lineEdit_date->text();
-    int salle = ui->lineEdit_salle->text().toInt();
-    int nombre_personnes = ui->lineEdit_nombre_personnes->text().toInt();
-    QString prix= ui->lineEdit_prix->text();
-    QString disponibilite= ui->lineEdit_disponibilite->text();
-    QDate date_=ui->dateEdit->date();
-
-
-  evenement e(id_evenement,type,date_,salle,nombre_personnes,prix,disponibilite);
-  bool test=e.ajouter_2();
-  if(test)
-{ui->tabetagere->setModel(tmpetagere.afficher());//refresh
-QMessageBox::information(nullptr, QObject::tr("Ajouter un evenement"),
-                  QObject::tr("evenement ajouté.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
-le->clear();
-le->setPlaceholderText("");
-le->setStyleSheet("background: white");
-}
-
-}
-  else
-      QMessageBox::critical(nullptr, QObject::tr("Ajouter un evenement"),
-                  QObject::tr("Erreur !.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-}
-
-void MainWindow::on_pb_supprimer_2_clicked()
-{
-    int id_evenement = ui->lineEdit_id_evenement->text().toInt();
-    bool test=tmpetagere.supprimer_2(id_evenement);
-    if(test)
-    {ui->tabetagere->setModel(tmpetagere.afficher());//refresh
-        QMessageBox::information(nullptr, QObject::tr("Supprimer un evenement"),
-                    QObject::tr("evenement supprimée.\n"
-                                "Click Cancel to exit."), QMessageBox::Cancel);
-        foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
-        le->clear();
-        }
+    if ((id == NULL) || (id<1))
+    {
+        ui->lineEdit_3->setStyleSheet("QLineEdit { color: red;}");
+    ui->txt_id->setText(msg_id);
+    ui->txt_id->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+    a.setValide();
 
     }
     else
-        QMessageBox::critical(nullptr, QObject::tr("Supprimer un evenement"),
+    {ui->lineEdit_3->setStyleSheet("QLineEdit { color: black;}");
+        ui->txt_id->setText(msg_vide);
+    }
+    if (( nbr_chambre== NULL) || (nbr_chambre<1))
+    {
+        ui->lineEdit_2->setStyleSheet("QLineEdit { color: red;}");
+    ui->txt_nbrch->setText(msg_nbr_chbre);
+    ui->txt_nbrch->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+    a.setValide();
+
+    }
+    else
+
+    {ui->lineEdit_2->setStyleSheet("QLineEdit { color: black;}");
+        ui->txt_nbrch->setText(msg_vide);
+
+    }
+    if ((nbr_nuit == NULL) || (nbr_nuit<1))
+    {
+        ui->lineEdit->setStyleSheet("QLineEdit { color: red;}");
+    ui->txt_nbrn->setText(msg_nbr_nuit);
+    ui->txt_nbrn->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+    a.setValide();
+
+    }
+    else
+    {ui->lineEdit->setStyleSheet("QLineEdit { color: black;}");
+        ui->txt_nbrn->setText(msg_vide);
+
+    }
+    if ((date_arrive<date3))
+       {
+        ui->dateEdit_2->setStyleSheet("QLineEdit { color: red;}");
+           ui->txt_a->setText(msg_date_arrive);
+           ui->txt_a->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+           a.setValide();
+
+       }
+       else {
+        ui->dateEdit_2->setStyleSheet("QLineEdit { color: black;}");
+           ui->txt_a->setText(msg_vide);
+
+       }
+    if ((date_sortie<date_arrive))
+       {
+        ui->dateEdit->setStyleSheet("QLineEdit { color: red;}");
+           ui->txt_s->setText(msg_date_sortie);
+           ui->txt_s->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+           a.setValide();
+
+       }
+       else {
+        ui->dateEdit->setStyleSheet("QLineEdit { color: black;}");
+           ui->txt_s->setText(msg_vide);
+
+       }
+    Reservation r(id,nbr_nuit,nbr_chambre,date_arrive,date_sortie,type_chambre,type_reservation);
+   if (a.getValide()==0)
+   {
+       bool test = r.ajouter();
+
+                   ui->lineEdit_3->setStyleSheet("QLineEdit { color: green;}");
+                   ui->lineEdit_2->setStyleSheet("QLineEdit { color: green;}");
+                   ui->lineEdit->setStyleSheet("QLineEdit { color: green;}");
+                   ui->dateEdit_2->setStyleSheet("QDateEdit { color: green;}");
+                   ui->dateEdit->setStyleSheet("QDateEdit { color: green;}");
+        QSystemTrayIcon *notifyIcon = new QSystemTrayIcon;
+        notifyIcon->show();
+        notifyIcon->setIcon(QIcon("icone.png"));
+
+        notifyIcon->showMessage("GESTION RESERVATION ","reservation  ajouté",QSystemTrayIcon::Information,15000);
+  QMessageBox::information(nullptr, QObject::tr("Ajouter une reservation"),
+                    QObject::tr("reservation ajouté.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+   }
+    else {
+        QMessageBox::critical(nullptr, QObject::tr("Ajouter une reservation"),
                     QObject::tr("Erreur !.\n"
                                 "Click Cancel to exit."), QMessageBox::Cancel);
+ }
+    ui->tableView->setModel(tmpr.afficher());
+
 }
 
-void MainWindow::on_pb_modifier_clicked()
+void MainWindow::on_pushButton_3_clicked()
 {
-    int id_activite = ui->lineEdit_id_activite->text().toInt();
-    QString type= ui->lineEdit_type->text();
-    QString duree= ui->lineEdit_duree->text();
-    QString lieux= ui->lineEdit_lieux->text();
-    QString responsable= ui->lineEdit_responsable->text();
+    int id = ui->lineEdit_3->text().toInt() ;
 
-  activite l(id_activite,type,duree,lieux,responsable);
-  bool test=l.modifier(id_activite);
-  if(test)
-{ui->tablivre->setModel(tmplivre.afficher());//refresh
-QMessageBox::information(nullptr, QObject::tr("Modifier une activite"),
-                  QObject::tr("activite modifiée.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
+    bool test=tmpr.supprimer(id);
+    if(test)
+    {
+        QSystemTrayIcon *notifyIcon = new QSystemTrayIcon;
+        notifyIcon->show();
+        notifyIcon->setIcon(QIcon("icone.png"));
 
-ui->lineEdit_id_activite->show();
-foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
-le->clear();
-}
+        notifyIcon->showMessage("GESTION RESERVATION ","reservation supprimé",QSystemTrayIcon::Information,15000);
+        QMessageBox::information(nullptr, QObject::tr("Supprimer une reservation"),
+                    QObject::tr("reservation supprimé.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
 
-}
-  else
-      QMessageBox::critical(nullptr, QObject::tr("Modifier activite"),
-                  QObject::tr("Erreur !.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-
-void MainWindow::on_pb_modifier_2_clicked()
-{
-    int id_evenement = ui->lineEdit_id_evenement->text().toInt();
-    QString type= ui->sexe->currentText();
-    //QString type= ui->lineEdit_type_2->text();
-    QDate date_=ui->dateEdit->date();
-
-    //QString date_= ui->lineEdit_date->text();
-    int salle= ui->lineEdit_salle->text().toInt();
-    int nombre_personnes= ui->lineEdit_nombre_personnes->text().toInt();
-    QString prix= ui->lineEdit_prix->text();
-    QString disponibilite= ui->lineEdit_disponibilite->text();
-
-
-  evenement e(id_evenement,type,date_,salle,nombre_personnes,prix,disponibilite);
-  bool test=e.modifier_2(id_evenement);
-  if(test)
-{ui->tabetagere->setModel(tmpetagere.afficher());//refresh
-QMessageBox::information(nullptr, QObject::tr("Modifier un evenement"),
-                  QObject::tr("evenement modifiée.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
-le->clear();
-}
-
-}
-  else
-      QMessageBox::critical(nullptr, QObject::tr("Modifier evenement"),
-                  QObject::tr("Erreur !.\n"
-                              "Click Cancel to exit."), QMessageBox::Cancel);
-
-
-}
-
-
-void MainWindow::on_pb_rechercher_clicked()
-{
-
-    QString str=ui->lineEdit_id_activite->text();
-    ui->tablivre->setModel(tmplivre.recherche(str));
-}
-
-
-
-
-void MainWindow::on_pb_rechercher_2_clicked()
-{
-    QString str=ui->lineEdit_id_evenement->text();
-    ui->tabetagere->setModel(tmpetagere.rechercher_2(str));
-}
-
-void MainWindow::on_tablivre_activated(const QModelIndex &index)
-{
-    QString val=ui->tablivre->model()->data(index).toString();
-    QSqlQuery qry;
-    qry.prepare("select * from activite where ID_ACTIVITE='"+val+"' or TYPE='"+val+"' or DUREE='"+val+"' or LIEUX='"+val+"' or RESPONSABLE='"+val+"'");
-
-     if (qry.exec())
-        {
-
-        while (qry.next())
-        {
-
-                  ui->lineEdit_id_activite->setText(qry.value(0).toString());
-                  ui->lineEdit_type->setText(qry.value(1).toString());
-                  ui->lineEdit_duree->setText(qry.value(2).toString());
-                  ui->lineEdit_lieux->setText(qry.value(3).toString());
-                  ui->lineEdit_responsable->setText(qry.value(4).toString());
-
-        }
     }
     else
     {
-       // QMessageBox::critical(this,tr("error"),qry.lastError().text());
+        QMessageBox::critical(nullptr, QObject::tr("Supprimer une reservation"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
     }
-      }
-
-
-void MainWindow::on_tabetagere_activated(const QModelIndex &index)
-{
-    QString val=ui->tabetagere->model()->data(index).toString();
-    QSqlQuery qry;
-    qry.prepare("select * from evenement where ID_EVENEMENT='"+val+"' or TYPE='"+val+"' or DATE_='"+val+"' or SALLE='"+val+"' or NOMBRE_PERSONNES='"+val+"' or PRIX='"+val+"' or DISPONIBILITE='"+val+"'");
-
-     if (qry.exec())
-        {
-
-        while (qry.next())
-        {
-
-                  ui->lineEdit_id_evenement->setText(qry.value(0).toString());
-                  ui->sexe->setCurrentText(qry.value(1).toString());
-                  // ui->lineEdit_type_2->setText(qry.value(1).toString());
-                  ui->dateEdit->setDate(qry.value(2).toDate());
-
-                  //ui->lineEdit_date->setText(qry.value(2).toString());
-                  ui->lineEdit_salle->setText(qry.value(3).toString());
-                  ui->lineEdit_nombre_personnes->setText(qry.value(4).toString());
-                  ui->lineEdit_prix->setText(qry.value(5).toString());
-                  ui->lineEdit_disponibilite->setText(qry.value(6).toString());
-
-
-        }
-    }
-    else
-    {
-       // QMessageBox::critical(this,tr("error"),qry.lastError().text());
-    }
-      }
-
-void MainWindow::sendMail()
-{
-
-    QString mail = ui->rcpt->text();
-    Smtp* smtp = new Smtp(ui->uname->text(), ui->paswd->text(), ui->server->text(), ui->port->text().toInt());
-    connect(smtp, SIGNAL(status(QString)), this, SLOT(mailSent(QString)));
-
-
-    smtp->sendMail(ui->uname->text(), ui->rcpt->text() , ui->subject->text(),ui->msg->toPlainText());
-
-    if(    connect(smtp, SIGNAL(status(QString)), this, SLOT(mailSent(QString)))
-)
-    {
-        QMessageBox::critical(this, "envoyer un mail", "Message non Envoyé (probleme de connexion)");
-    }
-    else
-    {
-        QMessageBox::information(this, "envoyer un mail", "Message envoyé avec succès.");
-    }
-    ui->server->setPlaceholderText("smtp.gmail.com");
-    ui->port->setPlaceholderText("465");
+     ui->tableView->setModel(tmpr.afficher());
 }
 
-/*void MainWindow::on_pushButton_6_clicked()
+void MainWindow::on_pushButton_2_clicked()
 {
-    SmtpClient smtp("smtp.gmail.com", 465, SmtpClient::SslConnection);
-    smtp.setUser("faroukchtioui7@gmail.com");
-    smtp.setPassword("farouk love");
-    MimeMessage message;
-    message.setSender(new EmailAddress("faroukchtioui7@gmail.com", "farouk chtioui"));
-    QString email =ui->choisi_un_email->text();
-    message.addRecipient(new EmailAddress(email, "Farouk CHTIOUI"));
-    MimeText text;
-    QString email2=ui->sujet->text();
-    message.setSubject(email2);
-    QString email3 = ui->pour_envoyer_email_2->toPlainText();
-    text.setText(email3);
-    message.addPart(&text);
-    smtp.connectToHost();
-    smtp.login();
-    if(smtp.sendMail(message))
+    int id = ui->lineEdit_3->text().toInt();
+    int nbr_nuit = ui->lineEdit->text().toInt();
+    QString type_chambre = ui->comboBox->currentText();
+    QString type_reservation = ui->comboBox_2->currentText();
+    int nbr_chambre=ui->lineEdit_2->text().toInt() ;
+    QDate date_arrive = ui->dateEdit_2->date() ;
+    QDate date_sortie = ui->dateEdit->date() ;
+    QDate date3=QDate::currentDate();
+
+
+    QRegExp regex1 ("[a-z]$");
+    QRegExp regex2 ("^[a-z]");
+    QRegExp regex3 ("^[0-9]*$");
+    QString msg_id="id invalide";
+    QString msg_nbr_nuit="nbr_nuit invlaide";
+    QString msg_date_arrive="date arrivee invlide";
+    QString msg_date_sortie="date sortie invlaide";
+    QString msg_nbr_chbre="nbr chbr invlaide";
+    QString msg_vide="";
+    Reservation a ;
+
+    if ((id == NULL) || (id<1))
     {
-        QMessageBox::information(this, "envoyer un mail", "Envoyé");
+        ui->lineEdit_3->setStyleSheet("QLineEdit { color: red;}");
+
+    ui->txt_id->setText(msg_id);
+    ui->txt_id->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+    a.setValide();
+
+    }
+    else
+    {ui->txt_id->setText(msg_vide);
+        ui->lineEdit_3->setStyleSheet("QLineEdit { color: black;}");
+
+    }
+    if (( nbr_chambre== NULL) || (nbr_chambre<1))
+    {
+        ui->lineEdit_2->setStyleSheet("QLineEdit { color: red;}");
+
+    ui->txt_nbrch->setText(msg_nbr_chbre);
+    ui->txt_nbrch->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+    a.setValide();
+
+    }
+    else
+    {ui->txt_nbrch->setText(msg_vide);
+        ui->lineEdit_2->setStyleSheet("QLineEdit { color: black;}");
+
+    }
+    if ((nbr_nuit == NULL) || (nbr_nuit<1))
+    {
+        ui->lineEdit->setStyleSheet("QLineEdit { color: red;}");
+
+    ui->txt_nbrn->setText(msg_nbr_nuit);
+    ui->txt_nbrn->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+    a.setValide();
+
+    }
+    else
+    {ui->txt_nbrn->setText(msg_vide);
+        ui->lineEdit->setStyleSheet("QLineEdit { color: black;}");
+
+    }
+    if ((date_arrive<date3))
+       {
+        ui->dateEdit_2->setStyleSheet("QLineEdit { color: red;}");
+
+           ui->txt_a->setText(msg_date_arrive);
+           ui->txt_a->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+           a.setValide();
+
+       }
+       else {
+           ui->txt_a->setText(msg_vide);
+           ui->dateEdit_2->setStyleSheet("QLineEdit { color: black;}");
+
+       }
+    if ((date_sortie<date_arrive))
+       {         ui->dateEdit->setStyleSheet("QLineEdit { color: red;}");
+
+           ui->txt_s->setText(msg_date_sortie);
+           ui->txt_s->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+
+           a.setValide();
+
+       }
+       else {
+           ui->txt_s->setText(msg_vide);
+           ui->dateEdit->setStyleSheet("QLineEdit { color: black;}");
+
+       }
+    Reservation r;
+    if (a.getValide()==0){
+    bool test=r.modifier(id,nbr_nuit,nbr_chambre,date_arrive,date_sortie,type_chambre,type_reservation);
+    ui->lineEdit_3->setStyleSheet("QLineEdit { color: green;}");
+    ui->lineEdit_2->setStyleSheet("QLineEdit { color: green;}");
+    ui->lineEdit->setStyleSheet("QLineEdit { color: green;}");
+    ui->dateEdit_2->setStyleSheet("QDateEdit { color: green;}");
+    ui->dateEdit->setStyleSheet("QDateEdit { color: green;}");
+        QSystemTrayIcon *notifyIcon = new QSystemTrayIcon;
+        notifyIcon->show();
+        notifyIcon->setIcon(QIcon("icone.png"));
+
+        notifyIcon->showMessage("GESTION RESERVATION ","reservation modifié",QSystemTrayIcon::Information,15000);
+        ui->tableView->setModel(tmpr.afficher());
+
+
+
+        QMessageBox::information(nullptr, QObject::tr("Modifier reservation"),
+                    QObject::tr("reservation Modifié.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
     }
     else
     {
-        QMessageBox::critical(this, "envoyer un mail", "Message non Envoyé (probleme de connexion)");
+        QMessageBox::critical(nullptr, QObject::tr("modifier resrvation"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
     }
-    smtp.quit();
-}*/
 
-/*void MainWindow::on_trier_3_clicked()
-{QString col ;
-    std::cout << "triii" << std::endl;
-   QModelIndexList a = ui->tabetagere->selectionModel()->selectedColumns() ;
-for (int i =0 ;i<a.count();i++){
- col =  ui->tabetagere->selectionModel()->model()->headerData(a.at(i).column(),Qt::Horizontal).toString();
-qDebug() << col;
+
+
 }
-     evenement *e= new evenement();
-     ui->tabetagere->setModel(e->trierevenement(col));
-}*/
-void MainWindow::on_comboBox_currentIndexChanged(int index) // tri event
+void MainWindow::on_pushButton_5_clicked()
 {
-    if (index==0)
+    QString str=ui->lineEdit_4->text();
+     ui->tableView_2->setModel(tmpr.recherche_1(str));
+}
+
+void MainWindow::on_tabafficher_activated(const QModelIndex &index)
 {
-        ui->tabetagere->setModel(tmpetagere.afficher());
-        ui->tabetagere->setModel(tmpetagere.tri_pub_2(index));
-
-    }
-    else{
-
-        if (index==1)
-        {
-            ui->tabetagere->setModel(tmpetagere.afficher());
-
-        ui->tabetagere->setModel(tmpetagere.tri_pub_3(index));
-    }
-        else
-
-            if (index==2)
+    QString val=ui->tableView->model()->data(index).toString();
+        QSqlQuery qry;
+        qry.prepare("select * from RESERVATION where ID='"+val+"'or TYPE_CHAMBRE='"+val+"'or TYPE_RESERVATION='"+val+"' or NBR_NUIT='"+val+"' or NBR_CHAMBRE='"+val+"' or DATE_ARRIVE='"+val+"' or DATE_SORTIE='"+val+"'");
+         if (qry.exec())
             {
-                ui->tabetagere->setModel(tmpetagere.afficher());
+            while (qry.next())
+            {
+                      ui->lineEdit_3->setText(qry.value(0).toString());
+                      ui->lineEdit->setText(qry.value(0).toString());
+                      ui->lineEdit_2->setText(qry.value(0).toString());
 
-        ui->tabetagere->setModel(tmpetagere.tri_pub_4(index));
-     }
+
+
+
+            }
+        }
         else
-
-                if (index==3)
-                {
-                    ui->tabetagere->setModel(tmpetagere.afficher());
-
-            ui->tabetagere->setModel(tmpetagere.tri_pub_5(index));
-         }  else
-if (index==4) {
-
-                        ui->tabetagere->setModel(tmpetagere.afficher());
-
-                ui->tabetagere->setModel(tmpetagere.tri_pub_6(index));}
-else
-
-        if (index==5)
         {
-            ui->tabetagere->setModel(tmpetagere.afficher());
+           // QMessageBox::critical(this,tr("error"),qry.lastError().text());
+        }
+}
 
-    ui->tabetagere->setModel(tmpetagere.tri_pub_7(index));
+void MainWindow::on_pushButton_4_clicked()
+{
+    if (ui->radioButton->isChecked()){
+    ui->tableView->setModel(tmpr.afficher());
+    ui->tableView->setModel(tmpr.trier());
+    }
+    else
+        if (ui->radioButton_2->isChecked())
+        {
+            ui->tableView->setModel(tmpr.afficher());
+            ui->tableView->setModel(tmpr.trier3());
+}
+}
+
+
+
+
+void MainWindow::on_pushButton_6_clicked()
+{
+
+     int id_facture = ui->lineEdit_5->text().toInt();
+
+     int prix = ui->lineEdit_6->text().toInt() ;
+     QString type_paiment= ui->comboBox_3->currentText() ;
+     QRegExp regex1 ("[a-z]$");
+     QRegExp regex2 ("^[a-z]");
+     QRegExp regex3 ("^[0-9]*$");
+     QString msg_id_facture="id_facture invalide";
+     QString msg_prix="prix invlaide";
+     QString msg_vide="";
+     Reglement a ;
+
+     if ((id_facture == NULL) || (id_facture<1))
+     {
+         ui->lineEdit_5->setStyleSheet("QLineEdit { color: red;}");
+     ui->txtfac->setText(msg_id_facture);
+     ui->txtfac->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+     a.setValide();
+
+     }
+     else
+     {ui->lineEdit_5->setStyleSheet("QLineEdit { color: black;}");
+         ui->txtfac->setText(msg_vide);
+     }
+     if (( prix== NULL) || (prix<1))
+     {
+         ui->lineEdit_6->setStyleSheet("QLineEdit { color: red;}");
+     ui->txtprix->setText(msg_prix);
+     ui->txtprix->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+     a.setValide();
+
+     }
+     else
+
+     {ui->lineEdit_6->setStyleSheet("QLineEdit { color: black;}");
+         ui->txtprix->setText(msg_vide);
+
+     }
+
+     Reglement r(id_facture,prix,type_paiment);
+     if (a.getValide()==0)
+     {
+         bool test = r.ajouter2();
+
+                     ui->lineEdit_5->setStyleSheet("QLineEdit { color: green;}");
+                     ui->lineEdit_6->setStyleSheet("QLineEdit { color: green;}");
+
+
+   QMessageBox::information(nullptr, QObject::tr("Ajouter une reglement"),
+                     QObject::tr("reglement ajouté.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+   }
+     else {
+         QMessageBox::critical(nullptr, QObject::tr("Ajouter une reglement"),
+                     QObject::tr("Erreur !.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+
+     ui->tableView_3->setModel(abc.afficher2());
+}
  }
 
-             }
-}
 
-QVector<double> MainWindow::Statistique_client()
+void MainWindow::on_tableView_activated(const QModelIndex &index)
 {
-    QSqlQuery q;
-    QVector<double> stat(5);
-    stat[0]=0;
-    stat[1]=0;
-    stat[2]=0;
-    stat[3]=0;
-    stat[4]=0;
+    QString val=ui->tableView->model()->data(index).toString();
+        QSqlQuery qry;
+        qry.prepare("select * from RESERVATION where ID='"+val+"'");
+        if(qry.exec())
+        {
+            while(qry.next())
+            {
 
-    q.prepare("SELECT type FROM EVENEMENT WHERE type='gala'");
-    q.exec();
-    while (q.next())
-    {
-        stat[0]++;
-    }
-    q.prepare("SELECT type FROM EVENEMENT WHERE type='marriage'");
-    q.exec();
-    while (q.next())
-    {
-        stat[1]++;
-    }
-    q.prepare("SELECT type FROM EVENEMENT WHERE type='conference'");
-    q.exec();
-    while (q.next())
-    {
-        stat[2]++;
-    }
-    q.prepare("SELECT type FROM EVENEMENT WHERE type='concert'");
-    q.exec();
-    while (q.next())
-    {
-        stat[3]++;
-    }
-    q.prepare("SELECT type FROM EVENEMENT WHERE type='autre'");
-    q.exec();
-    while (q.next())
-    {
-        stat[4]++;
-    }
+                ui->lineEdit_3->setText(qry.value(0).toString());
+                ui->lineEdit->setText(qry.value(1).toString());
+                ui->lineEdit_2->setText(qry.value(2).toString());
+                ui->dateEdit_2->setDate(qry.value(3).toDate());
+                ui->dateEdit->setDate(qry.value(4).toDate());
+               ui->comboBox->setCurrentText(qry.value(5).toString());
+                ui->comboBox_2->setCurrentText(qry.value(6).toString());
 
-    return stat;
+
+
+
 }
-void MainWindow::on_pushButton_1229_clicked()
+
+}
+        else
+            QMessageBox::critical(nullptr, QObject::tr("Ajouter une reglement"),
+                        QObject::tr("Erreur !.\n"
+                                    "Click Cancel to exit."), QMessageBox::Cancel);
+
+
+}
+
+
+
+void MainWindow::on_pushButton_12_clicked()
 {
-    MainWindow::makePlot_client();
+    //QDateTime datecreation = date.currentDateTime();
+            //QString afficheDC = "Date de Creation PDF : " + datecreation.toString() ;
+                   QPdfWriter pdf("C:/Users/ISSAM/Desktop/facture.pdf");
+                   QPainter painter(&pdf);
+                  int i = 4000;
+                       painter.setPen(Qt::blue);
+                       painter.setFont(QFont("Arial", 30));
+                       painter.drawText(1100,1200,"FACTURE");
+                       painter.setPen(Qt::black);
+                       painter.setFont(QFont("Arial", 15));
+                      // painter.drawText(1100,2000,afficheDC);
+                       painter.drawRect(100,100,7300,2600);
+                       //painter.drawPixmap(QRect(7600,70,2000,2600),QPixmap("C:/Users/RH/Desktop/projecpp/image/logopdf.png"));
+                       painter.drawRect(0,3000,9600,500);
+                       painter.setFont(QFont("Arial", 9));
+                       painter.drawText(200,3300,"ID_FACTURE");
+                       painter.drawText(1300,3300,"PRIX");
+                       painter.drawText(2100,3300,"TYPE_PAIMENT");
+
+
+                       QSqlQuery query;
+                       query.prepare("  select * from REGLEMENT");
+                       query.exec();
+                       while (query.next())
+                       {
+                           painter.drawText(200,i,query.value(0).toString());
+                           painter.drawText(1300,i,query.value(1).toString());
+                           painter.drawText(2200,i,query.value(2).toString());
+
+
+                          i = i + 500;
+                       }
+                       int reponse = QMessageBox::question(this, "Génerer PDF", "<PDF Enregistré>...Vous Voulez Affichez Le PDF ?", QMessageBox::Yes |  QMessageBox::No);
+                           if (reponse == QMessageBox::Yes)
+                           {
+                               QMessageBox::information(nullptr, QObject::tr("Ajouter une facture"),
+                                                 QObject::tr("facture ajouté.\n"
+                                                             "Click Cancel to exit."), QMessageBox::Cancel);
+                               painter.end();
+                           }
+                           if (reponse == QMessageBox::No)
+                           {
+                                painter.end();
+                           }
+}
+
+void MainWindow::on_pushButton_9_clicked()
+{
+
+       int id_facture = ui->lineEdit_5->text().toInt();
+       int prix= ui->lineEdit_6->text().toInt();
+       QString type_paiment = ui->comboBox_3->currentText();
+
+       QRegExp regex1 ("[a-z]$");
+       QRegExp regex2 ("^[a-z]");
+       QRegExp regex3 ("^[0-9]*$");
+       QString msg_id_facture="id_facture invalide";
+       QString msg_prix="prix invlaide";
+       QString msg_vide="";
+       Reglement a ;
+       if ((id_facture == NULL) || (id_facture<1))
+       {
+           ui->lineEdit_5->setStyleSheet("QLineEdit { color: red;}");
+       ui->txtfac->setText(msg_id_facture);
+       ui->txtfac->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+       a.setValide();
+
+       }
+       else
+       {ui->lineEdit_5->setStyleSheet("QLineEdit { color: black;}");
+           ui->txtfac->setText(msg_vide);
+       }
+       if (( prix== NULL) || (prix<1))
+       {
+           ui->lineEdit_6->setStyleSheet("QLineEdit { color: red;}");
+       ui->txtprix->setText(msg_prix);
+       ui->txtprix->setStyleSheet("QLabel { background-color : transparent; color : red; }");
+       a.setValide();
+
+       }
+       else
+
+       {ui->lineEdit_6->setStyleSheet("QLineEdit { color: black;}");
+           ui->txtprix->setText(msg_vide);
+
+       }
+       Reglement r;
+ if (a.getValide()==0)       {
+           bool test=r.modifier2(id_facture,prix,type_paiment);
+           ui->lineEdit_5->setStyleSheet("QLineEdit { color: green;}");
+           ui->lineEdit_6->setStyleSheet("QLineEdit { color: green;}");
+   ui->tableView_3->setModel(abc.afficher2());
+
+
+
+           QMessageBox::information(nullptr, QObject::tr("Modifier facture"),
+                       QObject::tr("facture Modifié.\n"
+                                   "Click Cancel to exit."), QMessageBox::Cancel);
+
+       }
+       else
+       {
+           QMessageBox::critical(nullptr, QObject::tr("modifier facture"),
+                       QObject::tr("Erreur !.\n"
+                                   "Click Cancel to exit."), QMessageBox::Cancel);
+       }
+
+
 
 }
 
-
-void MainWindow::makePlot_client()
+void MainWindow::on_pushButton_8_clicked()
 {
-    // prepare data:
-    QVector<double> x3(5), y3(20);
-    for (int i=0; i<x3.size(); ++i)
+    ui->tableView_3->setModel(abc.afficher2());
+    ui->tableView_3->setModel(abc.trier2());
+}
+
+void MainWindow::on_pushButton_10_clicked()
+{
+    QString str=ui->lineEdit_7->text();
+     ui->tableView_4->setModel(abc.recherchee_2(str));
+}
+
+void MainWindow::on_pushButton_7_clicked()
+{
+    int id_facture = ui->lineEdit_5->text().toInt() ;
+
+    bool test=abc.supprimer2(id_facture);
+    if(test)
     {
-      x3[i] = i+1;
+        QMessageBox::information(nullptr, QObject::tr("Supprimer une facture"),
+                    QObject::tr("facture supprimé.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
 
     }
-    for (int i=0; i<y3.size(); ++i)
+    else
     {
-      y3[i] = i+1;
-
+        QMessageBox::critical(nullptr, QObject::tr("Supprimer une facture"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
     }
-
-    QCPBars *bars1 = new QCPBars(ui->CustomPlot99->xAxis, ui->CustomPlot99->yAxis);
-    bars1->setWidth(2/(double)x3.size());
-    bars1->setData(x3, MainWindow::Statistique_client());
-    bars1->setName("type d'evenement selon client");
-    bars1->setPen(QPen(QColor(200, 40, 60).lighter(170)));
-
-    bars1->setBrush(QColor(200, 40, 60, 170));
-    ui->CustomPlot99->replot();
-
-
-    // move bars above graphs and grid below bars:
-    ui->CustomPlot99->addLayer("abovemain", ui->CustomPlot99->layer("main"), QCustomPlot::limAbove);
-    ui->CustomPlot99->addLayer("belowmain", ui->CustomPlot99->layer("main"), QCustomPlot::limBelow);
-    ui->CustomPlot99->xAxis->grid()->setLayer("belowmain");
-    ui->CustomPlot99->yAxis->grid()->setLayer("belowmain");
-
-    // set some pens, brushes and backgrounds:
-    QVector<double> Ticks;
-    Ticks<<1<<2<<3<<4<<5<<6;
-    QVector<QString> labels;
-    labels<<"gala"<<"marriage"<<"conference"<<"concert"<<"autre";
-    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTicks(Ticks,labels);
-    ui->CustomPlot99->xAxis->setTicker(textTicker);
-    ui->CustomPlot99->xAxis->setSubTicks(false);
-    ui->CustomPlot99->xAxis->setTickLength(0,4);
-    ui->CustomPlot99->xAxis->setBasePen(QPen(Qt::white, 1));
-    ui->CustomPlot99->yAxis->setBasePen(QPen(Qt::white, 1));
-    ui->CustomPlot99->xAxis->setTickPen(QPen(Qt::transparent, 1));
-    ui->CustomPlot99->yAxis->setTickPen(QPen(Qt::white, 1));
-    ui->CustomPlot99->xAxis->setSubTickPen(QPen(Qt::transparent, 1));
-    ui->CustomPlot99->yAxis->setSubTickPen(QPen(Qt::transparent, 1));
-    ui->CustomPlot99->xAxis->setTickLabelColor(Qt::white);
-    ui->CustomPlot99->yAxis->setTickLabelColor(Qt::white);
-    ui->CustomPlot99->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    ui->CustomPlot99->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    ui->CustomPlot99->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    ui->CustomPlot99->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    ui->CustomPlot99->xAxis->grid()->setSubGridVisible(true);
-    ui->CustomPlot99->yAxis->grid()->setSubGridVisible(true);
-    ui->CustomPlot99->xAxis->grid()->setZeroLinePen(Qt::NoPen);
-    ui->CustomPlot99->yAxis->grid()->setZeroLinePen(Qt::NoPen);
-    ui->CustomPlot99->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    ui->CustomPlot99->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    QLinearGradient plotGradient;
-    plotGradient.setStart(0, 0);
-    plotGradient.setFinalStop(0, 350);
-    plotGradient.setColorAt(0, QColor(10, 50, 80));
-    plotGradient.setColorAt(1, QColor(10, 20, 50));
-    ui->CustomPlot99->setBackground(plotGradient);
-    QLinearGradient axisRectGradient;
-    axisRectGradient.setStart(0, 0);
-    axisRectGradient.setFinalStop(0, 350);
-    axisRectGradient.setColorAt(0, QColor(10, 50, 80));
-    axisRectGradient.setColorAt(1, QColor(0, 0, 30));
-    ui->CustomPlot99->axisRect()->setBackground(axisRectGradient);
-
-    ui->CustomPlot99->rescaleAxes();
-    //ui->CustomPlot99->xAxis->setRange(0, 7);
-    //ui->CustomPlot99->yAxis->setRange(0, 10);
-
-
-
+     ui->tableView_3->setModel(abc.afficher2());
 }
 
-
-
-void MainWindow::on_tablivre_doubleClicked(const QModelIndex &index)
+void MainWindow::on_tableView_3_activated(const QModelIndex &index)
 {
-    ui->lineEdit_id_activite->hide();
+    QString val=ui->tableView_3->model()->data(index).toString();
+        QSqlQuery qry;
+        qry.prepare("select * from REGLEMENT where ID_FACTURE='"+val+"'");
+        if(qry.exec())
+        {
+            while(qry.next())
+            {
+
+                ui->lineEdit_5->setText(qry.value(0).toString());
+                ui->lineEdit_6->setText(qry.value(1).toString());
+                ui->comboBox_3->setCurrentText(qry.value(6).toString());
+
+
+
 
 }
 
+}
+        else
+            QMessageBox::critical(nullptr, QObject::tr("Ajouter une reglement"),
+                        QObject::tr("Erreur !.\n"
+                                    "Click Cancel to exit."), QMessageBox::Cancel);
+
+
+}
+
+void MainWindow::on_pushButton_11_clicked()
+{
+    //QDateTime datecreation = date.currentDateTime();
+            //QString afficheDC = "Date de Creation PDF : " + datecreation.toString() ;
+                   QPdfWriter pdf("C:/Users/ISSAM/Desktop/reservation.pdf");
+                   QPainter painter(&pdf);
+                  int i = 4000;
+                       painter.setPen(Qt::blue);
+                       painter.setFont(QFont("Arial", 30));
+                       painter.drawText(1100,1200,"RESERVATION");
+                       painter.setPen(Qt::black);
+                       painter.setFont(QFont("Arial", 15));
+                      // painter.drawText(1100,2000,afficheDC);
+                       painter.drawRect(100,100,7300,2600);
+                       //painter.drawPixmap(QRect(7600,70,2000,2600),QPixmap("C:/Users/RH/Desktop/projecpp/image/logopdf.png"));
+                       painter.drawRect(0,3000,9600,500);
+                       painter.setFont(QFont("Arial", 9));
+                       painter.drawText(200,3300,"ID");
+                       painter.drawText(900,3300,"NBR_NUIT");
+                       painter.drawText(1700,3300,"NBR_CHAMBRE");
+                       painter.drawText(3000,3300,"DATE_ARRIVEE");
+                       painter.drawText(4300,3300,"DATE_SORTIE");
+                       painter.drawText(5500,3300,"TYPE_CHAMBRE");
+                       painter.drawText(7100,3300,"TYPE_RESERVATION");
+
+
+
+
+                       QSqlQuery query;
+                       query.prepare("  select * from RESERVATION");
+                       query.exec();
+                       while (query.next())
+                       {
+                           painter.drawText(200,i,query.value(0).toString());
+                           painter.drawText(900,i,query.value(1).toString());
+                           painter.drawText(1700,i,query.value(2).toString());
+                           painter.drawText(3000,i,query.value(3).toString());
+                           painter.drawText(4300,i,query.value(4).toString());
+                           painter.drawText(5500,i,query.value(5).toString());
+                           painter.drawText(7100,i,query.value(6).toString());
+
+
+
+                          i = i + 500;
+                       }
+                       int reponse = QMessageBox::question(this, "Génerer PDF", "<PDF Enregistré>...Vous Voulez Affichez Le PDF ?", QMessageBox::Yes |  QMessageBox::No);
+                           if (reponse == QMessageBox::Yes)
+                           {
+                               QMessageBox::information(nullptr, QObject::tr("Ajouter une reservation"),
+                                                 QObject::tr("reservation ajouté.\n"
+                                                             "Click Cancel to exit."), QMessageBox::Cancel);
+                               painter.end();
+                           }
+                           if (reponse == QMessageBox::No)
+                           {
+                                painter.end();
+                           }
+}
+
+void MainWindow::on_pushButton_13_clicked()
+{
+    ui->tableView_3->setModel(abc.afficher2());
+}
+
+void MainWindow::on_pushButton_14_clicked()
+{
+    ui->tableView->setModel(tmpr.afficher());
+
+}

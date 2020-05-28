@@ -1,11 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#include "activite.h"
-#include "evenement.h"
+
 #include <QMainWindow>
-#include <QVector>
-
-
+#include "reservation.h"
+#include"reglement.h"
 namespace Ui {
 class MainWindow;
 }
@@ -15,58 +13,49 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
-    void on_pb_ajouter_clicked();
+    void on_pushButton_5_clicked();
 
-    void on_pb_supprimer_clicked();
+    void on_pushButton_9_clicked();
 
-    void on_pb_ajouter_2_clicked();
-
-    void on_pb_supprimer_2_clicked();
-
-    void on_pb_modifier_clicked();
-
-    void on_pb_modifier_2_clicked();
-
-    void on_pb_rechercher_clicked();
-
-    void on_pb_rechercher_2_clicked();
-
-   // void on_pb_supprimer_5_clicked();
-
-   // void on_pb_modifier_5_clicked();
-
-    void on_tablivre_activated(const QModelIndex &index);
-
-    void on_tabetagere_activated(const QModelIndex &index);
-
-   // void on_pushButton_6_clicked();
-
-   // void on_trier_3_clicked();
-
-    void on_comboBox_currentIndexChanged(int index);
-
-   // QVector<double> Statistique_client();
-
-    void on_pushButton_1229_clicked(); // stat
-    void makePlot_client (); //stat
-    QVector<double> Statistique_client(); //stat
+    void on_pushButton_6_clicked();
+    void on_pushButton_4_clicked();
 
 
-    void on_tablivre_doubleClicked(const QModelIndex &index);
+    void on_tabafficher_activated(const QModelIndex &index);
 
-    void  sendMail();
+    void on_pushButton_clicked();
 
+    void on_pushButton_2_clicked();
 
-   // void on_pushButton_1229_clicked();
+    void on_pushButton_10_clicked();
+
+    void on_pushButton_7_clicked();
+
+    void on_pushButton_3_clicked();
+
+    void on_pushButton_8_clicked();
+
+    void on_tableView_activated(const QModelIndex &index);
+
+    void on_pushButton_12_clicked();
+
+    void on_tableView_3_activated(const QModelIndex &index);
+
+    void on_pushButton_11_clicked();
+
+    void on_pushButton_13_clicked();
+
+    void on_pushButton_14_clicked();
 
 private:
     Ui::MainWindow *ui;
-    activite tmplivre;
-    evenement tmpetagere;
+    Reservation tmpr ;
+    Reglement abc ;
+
 };
 
 #endif // MAINWINDOW_H
