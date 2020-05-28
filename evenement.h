@@ -3,15 +3,18 @@
 #include <QString>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
+#include <QDate>
 
 class evenement
 {
 public:
     evenement();
-    evenement(int ,QString ,QString ,int ,int ,QString ,QString );
+    evenement(int ,QString ,QDate/*QString*/ ,int ,int ,QString ,QString );
     int get_id_evenement();
     QString get_type();
-    QString get_date();
+    //QString get_date();
+  QDate get_date(int *year ,int *month,int *day) ;
+
     int get_salle();
     int get_nombre_personnes();
     QString get_prix();
@@ -32,8 +35,9 @@ public:
 
     bool supprimer_2(int);
     private:
-        QString type,date_,disponibilite,prix;
+        QString type,/*date_,*/disponibilite,prix;
         int id_evenement,salle,nombre_personnes;
+      QDate date_;
     };
 
 

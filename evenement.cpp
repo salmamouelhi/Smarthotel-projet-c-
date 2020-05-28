@@ -3,9 +3,9 @@
 evenement::evenement()
 {
     id_evenement=salle=nombre_personnes=0;
-    disponibilite=type=date_=prix="";
+    disponibilite=type=/*date_=*/prix="";
 }
-evenement::evenement(int id_evenement,QString type,QString date_,int salle,int nombre_personnes,QString prix,QString disponibilite)
+evenement::evenement(int id_evenement,QString type,QDate date_/*QString date_*/,int salle,int nombre_personnes,QString prix,QString disponibilite)
 {
 this->id_evenement=id_evenement;
     this->salle=salle;
@@ -17,11 +17,13 @@ this->id_evenement=id_evenement;
 }
 int evenement::get_id_evenement(){return id_evenement;}
 QString evenement::get_type(){return type;}
-QString evenement::get_date(){return date_;}
+//QString evenement::get_date(){return date_;}
 int evenement::get_salle(){return salle;}
 int evenement::get_nombre_personnes(){return nombre_personnes;}
 QString evenement::get_prix(){return prix;}
 QString evenement::get_disponibilite(){return disponibilite;}
+QDate evenement::get_date(int *year,int *month,int *day){return date_ ;}
+
 
 bool evenement::ajouter_2()
 {
